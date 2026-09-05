@@ -19,7 +19,6 @@ import (
 )
 
 type AuthHandler struct {
-	renderer    *cais.Renderer
 	store       store.Store
 	site        meta.Site
 	sessions    session.Store

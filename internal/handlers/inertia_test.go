@@ -28,18 +28,6 @@ func inertiaRequest(method, target string, body io.Reader) *http.Request {
 	return httptest.NewRequest(method, target, body)
 }
 
-func parseInertiaJSON(t *testing.T, rr *httptest.ResponseRecorder) map[string]any {
-	t.Helper()
-	return map[string]any{"html": rr.Body.String()}
-}
-
-func assertHTMLContains(t *testing.T, rr *httptest.ResponseRecorder, want string) {
-	t.Helper()
-	if !strings.Contains(rr.Body.String(), want) {
-		t.Errorf("body missing %q, got %s", want, rr.Body.String())
-	}
-}
-
 func assertInertiaComponent(t *testing.T, rr *httptest.ResponseRecorder, want string) {
 	t.Helper()
 	if rr.Code != http.StatusOK && rr.Code != http.StatusUnprocessableEntity {

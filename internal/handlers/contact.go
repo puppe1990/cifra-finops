@@ -17,12 +17,11 @@ import (
 )
 
 type ContactHandler struct {
-	renderer *cais.Renderer
-	store    store.Store
-	site     meta.Site
-	catalog  *i18n.Catalog
-	cfg      cais.Config
-	views    *view.Renderer
+	store   store.Store
+	site    meta.Site
+	catalog *i18n.Catalog
+	cfg     cais.Config
+	views   *view.Renderer
 }
 
 func NewContactHandler(_ *view.Renderer, s store.Store, site meta.Site, catalog *i18n.Catalog, cfg cais.Config, views *view.Renderer) *ContactHandler {

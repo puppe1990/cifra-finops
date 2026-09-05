@@ -22,13 +22,12 @@ import (
 )
 
 type DashboardHandler struct {
-	renderer *cais.Renderer
-	store    store.Store
-	site     meta.Site
-	cfg      cais.Config
-	views    *view.Renderer
-	syncer   *syncer.Syncer
-	now      func() time.Time
+	store  store.Store
+	site   meta.Site
+	cfg    cais.Config
+	views  *view.Renderer
+	syncer *syncer.Syncer
+	now    func() time.Time
 }
 
 func NewDashboardHandler(_ *view.Renderer, s store.Store, site meta.Site, cfg cais.Config, views *view.Renderer) *DashboardHandler {

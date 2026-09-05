@@ -5,6 +5,7 @@ data/
 web/templates/
 web/src/
 web/static/build/
+web/static/js/amarra.js
 web/static/css/styles.css
 package-lock.json
 go.sum

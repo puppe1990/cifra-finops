@@ -37,10 +37,3 @@ func writePage(w http.ResponseWriter, r *http.Request, views *view.Renderer, cfg
 	}
 	view.Write(w, r, views, view.Page{Layout: layout, Name: name, Data: data, Status: st}, cfg)
 }
-
-func mapProps(in map[string]any) map[string]any {
-	if in == nil {
-		return map[string]any{}
-	}
-	return in
-}

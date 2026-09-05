@@ -13,11 +13,10 @@ import (
 )
 
 type HomeHandler struct {
-	renderer *cais.Renderer
-	site     meta.Site
-	catalog  *i18n.Catalog
-	cfg      cais.Config
-	views    *view.Renderer
+	site    meta.Site
+	catalog *i18n.Catalog
+	cfg     cais.Config
+	views   *view.Renderer
 }
 
 func NewHomeHandler(_ *view.Renderer, site meta.Site, catalog *i18n.Catalog, cfg cais.Config, views *view.Renderer) *HomeHandler {
