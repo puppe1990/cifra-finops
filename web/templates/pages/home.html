@@ -1,0 +1,21 @@
+{{ define "content" }}
+<div class="pointer-events-none absolute inset-0 opacity-[0.08]" style="background-image: radial-gradient(rgb(var(--grain) / 0.9) 0.8px, transparent 0.8px); background-size: 9px 9px;"></div>
+<header class="relative mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
+  <p class="font-display text-2xl">{{ if .Site }}{{ .Site.AppName }}{{ else }}Cifra{{ end }}</p>
+  <nav class="flex items-center gap-6 font-mono text-xs uppercase tracking-widest">
+    {{ template "locale_toggle" . }}
+    <a href="/login" data-amarra-drive="true" class="text-paper-200 hover:text-copper-400">{{ index .labels "auth.login_submit" }}</a>
+    <a href="/dashboard" data-amarra-drive="true" class="text-paper-200 hover:text-copper-400">{{ index .labels "dashboard.title" }}</a>
+  </nav>
+</header>
+<main class="relative mx-auto max-w-6xl px-6 pb-24 pt-10">
+  <p class="font-mono text-[11px] uppercase tracking-[0.35em] text-copper-400">{{ index .labels "eyebrow" }}</p>
+  <h1 class="mt-4 max-w-3xl font-display text-6xl leading-[0.92] md:text-8xl" data-testid="inertia-ready">{{ index .labels "heading" }}</h1>
+  <p class="mt-8 max-w-xl text-lg leading-relaxed text-paper-200">{{ index .labels "subtitle" }}</p>
+  <div class="mt-10 flex flex-wrap gap-4">
+    <a href="/login" data-amarra-drive="true" class="bg-copper-500 px-6 py-3 font-mono text-sm uppercase tracking-widest text-ink-950">{{ index .labels "home.open_ledger" }}</a>
+    <a href="/signup" data-amarra-drive="true" class="border border-paper-200/30 px-6 py-3 font-mono text-sm uppercase tracking-widest text-paper-50">{{ index .labels "home.new_workspace" }}</a>
+  </div>
+  <p class="mt-16 font-mono text-xs text-paper-200">{{ index .labels "stack" }}</p>
+</main>
+{{ end }}

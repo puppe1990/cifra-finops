@@ -1,0 +1,17 @@
+{{ define "content" }}
+<p class="font-mono text-[11px] uppercase tracking-[0.3em] text-copper-400">{{ index .labels "nav.anomalies" }}</p>
+<h2 class="mt-1 font-display text-4xl">{{ index .labels "ano.title" }}</h2>
+<p class="mt-8 font-display text-6xl leading-none tracking-tight text-copper-400">{{ len .anomalies }}</p>
+<ul class="mt-12 space-y-3">
+  {{ range .anomalies }}
+  <li>
+    <a href="{{ if .query }}/dashboard?month={{ .query }}{{ else }}/compare{{ end }}" data-amarra-drive="true" class="block border border-paper-200/15 bg-ink-900 p-4 hover:border-copper-500">
+      <p class="font-display text-xl leading-tight">{{ if .service }}{{ .service }}{{ else }}{{ .query }}{{ end }}</p>
+      <p class="shrink-0 font-mono text-lg text-copper-400">{{ .usd }}</p>
+    </a>
+  </li>
+  {{ else }}
+  <li class="border border-paper-200/15 bg-ink-900 px-4 py-6 text-sm text-paper-200">{{ index .labels "ano.empty" }}</li>
+  {{ end }}
+</ul>
+{{ end }}

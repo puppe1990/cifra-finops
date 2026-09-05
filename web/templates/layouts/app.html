@@ -1,0 +1,97 @@
+{{ define "app" }}
+<!doctype html>
+<html lang="{{ if .htmlLang }}{{ .htmlLang }}{{ else }}en{{ end }}">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    {{ if .CSRFToken }}<meta name="csrf-token" content="{{ .CSRFToken }}" />{{ end }}
+    <title>{{ if .Title }}{{ .Title }} · Cifra{{ else }}Cifra{{ end }}</title>
+    <link rel="stylesheet" href="/static/css/styles.css" />
+    <link rel="manifest" href="/static/manifest.webmanifest" />
+    <meta name="theme-color" content="#121816" />
+    <link rel="icon" href="/static/icons/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png" />
+    <script>
+      try {
+        if (localStorage.getItem("cifra-theme") === "light") {
+          document.documentElement.classList.add("light");
+          document.querySelector('meta[name="theme-color"]').setAttribute("content", "#f7f1e2");
+        }
+      } catch (e) {}
+    </script>
+    <script src="/static/js/amarra.js" defer></script>
+    <script src="/static/js/cifra.js" defer></script>
+  </head>
+  <body class="min-h-screen bg-ink-950 text-paper-50">
+    <div class="pointer-events-none fixed inset-0 opacity-[0.07]" style="background-image: radial-gradient(rgb(var(--grain) / 0.9) 0.6px, transparent 0.6px); background-size: 7px 7px;"></div>
+    <div class="relative flex min-h-screen flex-col md:flex-row">
+      {{ template "shell_aside" . }}
+      <main id="amarra-main" class="min-w-0 flex-1 px-6 py-8 md:px-10">
+        <div id="amarra-toast-host" aria-live="polite"></div>
+        {{ if .Flash }}<div class="mb-6 border border-copper-500 px-4 py-3 font-mono text-xs text-copper-400" role="status">{{ .Flash }}</div>{{ end }}
+        {{ template "content" . }}
+      </main>
+    </div>
+  </body>
+</html>
+{{ end }}
+
+{{ define "shell_aside" }}
+<aside class="flex w-full shrink-0 flex-col border-b border-ink-700 bg-ink-900 md:w-64 md:border-b-0 md:border-r">
+  <div class="flex items-end justify-between border-b border-ink-700 px-5 py-4 md:block md:px-5 md:py-6">
+    <a href="/dashboard" class="block" data-amarra-drive="true">
+      <p class="font-mono text-[10px] uppercase tracking-[0.28em] text-copper-400">FinOps AWS</p>
+      <h1 class="mt-1 font-display text-3xl leading-none text-paper-50">{{ if .Site }}{{ .Site.AppName }}{{ else }}Cifra{{ end }}</h1>
+    </a>
+    {{ if .tenant }}<p class="mt-3 hidden font-mono text-xs text-paper-200 md:block">{{ .tenant.name }}</p>{{ end }}
+  </div>
+  <nav class="flex gap-1 overflow-x-auto px-3 py-3 text-sm md:flex-1 md:flex-col md:space-y-0.5 md:overflow-visible md:py-5">
+    {{ $active := .ActiveNav }}
+    <a href="/dashboard" data-amarra-drive="true" class="whitespace-nowrap rounded-sm px-3 py-2 tracking-wide {{ if eq $active "dashboard" }}bg-copper-500 text-ink-950{{ else }}text-paper-200 hover:bg-ink-800{{ end }}">{{ index .labels "nav.ledger" }}</a>
+    <a href="/compare" data-amarra-drive="true" class="whitespace-nowrap rounded-sm px-3 py-2 tracking-wide {{ if eq $active "compare" }}bg-copper-500 text-ink-950{{ else }}text-paper-200 hover:bg-ink-800{{ end }}">{{ index .labels "nav.compare" }}</a>
+    <a href="/anomalies" data-amarra-drive="true" class="whitespace-nowrap rounded-sm px-3 py-2 tracking-wide {{ if eq $active "anomalies" }}bg-copper-500 text-ink-950{{ else }}text-paper-200 hover:bg-ink-800{{ end }}">{{ index .labels "nav.anomalies" }}</a>
+    <a href="/resources" data-amarra-drive="true" class="whitespace-nowrap rounded-sm px-3 py-2 tracking-wide {{ if eq $active "resources" }}bg-copper-500 text-ink-950{{ else }}text-paper-200 hover:bg-ink-800{{ end }}">{{ index .labels "nav.resources" }}</a>
+    <a href="/accounts" data-amarra-drive="true" class="whitespace-nowrap rounded-sm px-3 py-2 tracking-wide {{ if eq $active "accounts" }}bg-copper-500 text-ink-950{{ else }}text-paper-200 hover:bg-ink-800{{ end }}">{{ index .labels "nav.accounts" }}</a>
+    <a href="/budgets" data-amarra-drive="true" class="whitespace-nowrap rounded-sm px-3 py-2 tracking-wide {{ if eq $active "budgets" }}bg-copper-500 text-ink-950{{ else }}text-paper-200 hover:bg-ink-800{{ end }}">{{ index .labels "nav.budgets" }}</a>
+    <a href="/tenants" data-amarra-drive="true" class="whitespace-nowrap rounded-sm px-3 py-2 tracking-wide {{ if eq $active "tenants" }}bg-copper-500 text-ink-950{{ else }}text-paper-200 hover:bg-ink-800{{ end }}">{{ index .labels "nav.tenants" }}</a>
+    <a href="/settings" data-amarra-drive="true" class="whitespace-nowrap rounded-sm px-3 py-2 tracking-wide {{ if eq $active "settings" }}bg-copper-500 text-ink-950{{ else }}text-paper-200 hover:bg-ink-800{{ end }}">{{ index .labels "nav.settings" }}</a>
+  </nav>
+  <div class="hidden space-y-3 border-t border-ink-700 p-4 md:block">
+    {{ if and .tenants (gt (len .tenants) 1) }}
+    <form action="/tenants/switch" method="post" data-amarra-drive="true">
+      {{ csrfField .CSRFToken }}
+      <label class="block font-mono text-[10px] uppercase tracking-widest text-paper-200">
+        {{ index .labels "workspace" }}
+        <select name="tenant_id" class="mt-1 w-full rounded-sm border border-ink-700 bg-ink-800 px-2 py-1.5 text-xs text-paper-50" onchange="this.form.requestSubmit()">
+          {{ range .tenants }}
+          <option value="{{ .id }}" {{ if and $.tenant (eq .id $.tenant.id) }}selected{{ end }}>{{ .name }}</option>
+          {{ end }}
+        </select>
+      </label>
+    </form>
+    {{ end }}
+    {{ if .userEmail }}<p class="truncate font-mono text-[11px] text-paper-200">{{ .userEmail }}</p>{{ end }}
+    {{ template "locale_toggle" . }}
+    <button type="button" class="flex w-full items-center justify-between rounded-sm border border-ink-700 px-3 py-2 text-left text-sm text-paper-200" data-testid="theme-toggle" amarra-hook="theme" aria-pressed="false">{{ index .labels "theme.light" }}</button>
+    <form action="/logout" method="post" data-amarra-drive="true">
+      {{ csrfField .CSRFToken }}
+      <button type="submit" class="w-full rounded-sm border border-ink-700 px-3 py-2 text-left text-sm text-paper-200" data-testid="logout-button">{{ index .labels "auth.logout" }}</button>
+    </form>
+  </div>
+</aside>
+{{ end }}
+
+{{ define "locale_toggle" }}
+<div class="inline-flex overflow-hidden border border-ink-700" data-testid="locale-toggle">
+  <form action="/locale" method="post" data-amarra-drive="true">
+    {{ csrfField .CSRFToken }}
+    <input type="hidden" name="locale" value="en" />
+    <button type="submit" class="px-2 py-1 font-mono text-[10px] uppercase tracking-widest {{ if eq .locale "en" }}bg-copper-500 text-ink-950{{ else }}text-paper-200{{ end }}" aria-pressed="{{ if eq .locale "en" }}true{{ else }}false{{ end }}">{{ index .labels "lang.en" }}</button>
+  </form>
+  <form action="/locale" method="post" data-amarra-drive="true">
+    {{ csrfField .CSRFToken }}
+    <input type="hidden" name="locale" value="pt" />
+    <button type="submit" class="px-2 py-1 font-mono text-[10px] uppercase tracking-widest {{ if eq .locale "pt" }}bg-copper-500 text-ink-950{{ else }}text-paper-200{{ end }}" aria-pressed="{{ if eq .locale "pt" }}true{{ else }}false{{ end }}">{{ index .labels "lang.pt" }}</button>
+  </form>
+</div>
+{{ end }}

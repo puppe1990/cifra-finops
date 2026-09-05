@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/puppe1990/cais/pkg/cais/passwordreset"
+	"github.com/puppe1990/amarra-cais/pkg/cais/passwordreset"
 )
 
 func (s *SQLiteStore) CreatePasswordResetToken(userID int64) (string, error) {

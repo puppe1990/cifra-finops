@@ -7,10 +7,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/puppe1990/cais/pkg/cais"
-	"github.com/puppe1990/cais/pkg/cais/i18n"
-	"github.com/puppe1990/cais/pkg/cais/passwordreset"
-	"github.com/puppe1990/cais/pkg/cais/session"
+	"github.com/puppe1990/amarra-cais/pkg/cais"
+	"github.com/puppe1990/amarra-cais/pkg/cais/i18n"
+	"github.com/puppe1990/amarra-cais/pkg/cais/passwordreset"
+	"github.com/puppe1990/amarra-cais/pkg/cais/session"
 
 	"github.com/puppe1990/aws-finops/internal/store"
 )
@@ -28,7 +28,7 @@ func (c *captureNotifier) NotifyReset(email, token string) error {
 
 func newAuthHandlerForReset(t *testing.T, s store.Store, notify passwordreset.Notifier) *AuthHandler {
 	t.Helper()
-	h := NewAuthHandler(setupTestRenderer(t), s, testSite(), s.Sessions(), cais.Config{AppURL: "http://localhost:8080"}, i18n.DefaultCatalog(), setupTestInertia(t))
+	h := NewAuthHandler(setupTestRenderer(t), s, testSite(), s.Sessions(), cais.Config{AppURL: "http://localhost:8080"}, i18n.DefaultCatalog(), setupTestViews(t))
 	h.resetNotify = notify
 	return h
 }
@@ -147,8 +147,8 @@ func TestAuth_ResetPasswordPost_invalidToken_rendersError(t *testing.T) {
 	rr := httptest.NewRecorder()
 	h.ResetPasswordPost(rr, req)
 
-	if rr.Code != http.StatusOK {
-		t.Errorf("status = %d, want 200", rr.Code)
+	if rr.Code != http.StatusUnprocessableEntity {
+		t.Errorf("status = %d, want 422", rr.Code)
 	}
 	assertInertiaComponent(t, rr, "ResetPassword")
 	assertInertiaErrors(t, rr, "token")

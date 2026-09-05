@@ -1,0 +1,59 @@
+{{ define "content" }}
+<div class="flex flex-wrap items-end justify-between gap-4">
+  <div>
+    <div class="inline-flex items-center gap-4 border border-ink-700 px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.3em] text-copper-400">
+      {{ if .prevMonth }}<a href="/dashboard?month={{ .prevMonth }}" data-amarra-drive="true" class="hover:text-paper-50" aria-label="{{ .prevMonth }}">‹</a>{{ else }}<span class="opacity-25">‹</span>{{ end }}
+      <span data-month="{{ .month }}">{{ if .monthLabel }}{{ .monthLabel }}{{ else }}{{ index .labels "dash.month" }}{{ end }}</span>
+      {{ if .nextMonth }}<a href="/dashboard?month={{ .nextMonth }}" data-amarra-drive="true" class="hover:text-paper-50" aria-label="{{ .nextMonth }}">›</a>{{ else }}<span class="opacity-25">›</span>{{ end }}
+    </div>
+    {{ if .accounts }}{{ with index .accounts 0 }}<p class="mt-2 font-mono text-xs text-paper-200">{{ .awsAccountId }}</p>{{ end }}{{ end }}
+    <h2 class="mt-4 font-display text-4xl">{{ index .labels "dashboard.title" }}</h2>
+  </div>
+  <form action="/sync" method="post" data-amarra-drive="true">
+    {{ csrfField .CSRFToken }}
+    <button type="submit" class="border border-copper-500 px-4 py-2 font-mono text-xs uppercase tracking-widest text-copper-400 hover:bg-copper-500 hover:text-ink-950">{{ index .labels "dash.sync" }}</button>
+  </form>
+</div>
+<section class="mt-10">
+  <p class="font-mono text-[10px] uppercase tracking-[0.3em] text-paper-200">{{ index .labels "dash.runrate" }}</p>
+  <p class="mt-2 font-display text-6xl leading-none tracking-tight text-copper-400 md:text-7xl">{{ if .summary.monthlyUSD }}{{ .summary.monthlyUSD }}{{ else }}US$ 0,00{{ end }}</p>
+  <div class="mt-4 flex flex-wrap gap-2">
+    {{ if and .isCurrent .summary.forecastUSD }}
+    <p class="inline-flex border border-copper-500 px-3 py-1 font-mono text-xs uppercase tracking-widest text-copper-400" data-forecast>{{ .summary.forecastLabel }} {{ .summary.forecastUSD }}</p>
+    {{ end }}
+    {{ range .budgets }}
+    <p class="inline-flex border border-ink-700 px-3 py-1 font-mono text-xs uppercase tracking-widest text-paper-50">{{ .name }} {{ .spent }} / {{ .amount }}</p>
+    {{ end }}
+  </div>
+</section>
+<section class="mt-16">
+  <h3 class="font-display text-2xl">{{ index .labels "dash.by_service" }}</h3>
+  <ul class="mt-6 space-y-8">
+    {{ range .services }}
+    <li class="border-b border-paper-200/10 pb-8 last:border-b-0 last:pb-0">
+      <div class="flex items-baseline justify-between gap-4">
+        <h4 class="font-display text-xl leading-tight">{{ .name }}</h4>
+        <p class="shrink-0 font-mono text-lg text-copper-400">{{ .usd }}</p>
+      </div>
+      <div class="mt-4 w-full bg-ink-800" style="height: 0.45rem"><div class="h-full bg-copper-400" data-testid="spend-bar" style="width: {{ .pct }}%"></div></div>
+    </li>
+    {{ else }}
+    <li class="text-sm text-paper-200">{{ index .labels "dash.nothing_synced" }}</li>
+    {{ end }}
+  </ul>
+</section>
+{{ if .findings }}
+<section class="mt-16">
+  <h3 class="font-display text-2xl">{{ index .labels "dash.findings" }}</h3>
+  <div class="mt-6 space-y-3">
+    {{ range .findings }}
+    <a href="{{ if eq .kind "ce_denied" }}/settings{{ else }}/resources{{ end }}" data-amarra-drive="true" class="block border border-paper-200/15 bg-ink-900 p-4 hover:border-copper-500">
+      <p class="font-mono text-[10px] uppercase tracking-widest text-copper-400">{{ .severity }}</p>
+      <p class="mt-2 font-display text-xl leading-tight">{{ .title }}</p>
+      <p class="mt-1 text-sm text-paper-200">{{ .detail }}</p>
+    </a>
+    {{ end }}
+  </div>
+</section>
+{{ end }}
+{{ end }}

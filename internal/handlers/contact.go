@@ -4,33 +4,32 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/puppe1990/cais/pkg/cais"
-	"github.com/puppe1990/cais/pkg/cais/flash"
-	"github.com/puppe1990/cais/pkg/cais/httpx"
-	"github.com/puppe1990/cais/pkg/cais/i18n"
-	"github.com/puppe1990/cais/pkg/cais/meta"
-	"github.com/puppe1990/cais/pkg/cais/validate"
-	inertia "github.com/romsar/gonertia/v3"
+	"github.com/puppe1990/amarra-cais/pkg/amarra/view"
+	"github.com/puppe1990/amarra-cais/pkg/cais"
+	"github.com/puppe1990/amarra-cais/pkg/cais/flash"
+	"github.com/puppe1990/amarra-cais/pkg/cais/httpx"
+	"github.com/puppe1990/amarra-cais/pkg/cais/i18n"
+	"github.com/puppe1990/amarra-cais/pkg/cais/meta"
+	"github.com/puppe1990/amarra-cais/pkg/cais/validate"
 
 	"github.com/puppe1990/aws-finops/internal/models"
 	"github.com/puppe1990/aws-finops/internal/store"
 )
 
 type ContactHandler struct {
-	renderer *cais.Renderer
-	store    store.Store
-	site     meta.Site
-	catalog  *i18n.Catalog
-	cfg      cais.Config
-	inertia  *inertia.Inertia
+	store   store.Store
+	site    meta.Site
+	catalog *i18n.Catalog
+	cfg     cais.Config
+	views   *view.Renderer
 }
 
-func NewContactHandler(renderer *cais.Renderer, s store.Store, site meta.Site, catalog *i18n.Catalog, cfg cais.Config, i *inertia.Inertia) *ContactHandler {
-	return &ContactHandler{renderer: renderer, store: s, site: site, catalog: catalog, cfg: cfg, inertia: i}
+func NewContactHandler(_ *view.Renderer, s store.Store, site meta.Site, catalog *i18n.Catalog, cfg cais.Config, views *view.Renderer) *ContactHandler {
+	return &ContactHandler{store: s, site: site, catalog: catalog, cfg: cfg, views: views}
 }
 
 func (h *ContactHandler) Get(w http.ResponseWriter, r *http.Request) {
-	_ = h.inertia.Render(w, r, "Contact", publicProps(h.site, r, h.cfg.Locale))
+	writePage(w, r, h.views, h.cfg, "public", "contact", publicProps(h.site, r, h.cfg.Locale))
 }
 
 func (h *ContactHandler) Post(w http.ResponseWriter, r *http.Request) {
@@ -54,12 +53,13 @@ func (h *ContactHandler) Post(w http.ResponseWriter, r *http.Request) {
 		errs.Add("email", msg)
 	}
 	if errs.Any() {
-		ve := make(inertia.ValidationErrors)
+		ve := map[string]string{}
 		for k, v := range errs {
 			ve[k] = v
 		}
-		ctx := inertia.SetValidationErrors(r.Context(), ve)
-		_ = h.inertia.Render(w, r.WithContext(ctx), "Contact", inertia.Props{})
+		props := publicProps(h.site, r, h.cfg.Locale)
+		props["Errors"] = ve
+		writePage(w, r, h.views, h.cfg, "public", "contact", props, 422)
 		return
 	}
 
@@ -69,5 +69,5 @@ func (h *ContactHandler) Post(w http.ResponseWriter, r *http.Request) {
 	}
 
 	flash.Set(w, "success", "Message sent successfully.", h.cfg.CookieSecure())
-	h.inertia.Redirect(w, r, "/contact", http.StatusSeeOther)
+	http.Redirect(w, r, "/contact", http.StatusSeeOther)
 }

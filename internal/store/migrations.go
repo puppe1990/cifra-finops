@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"embed"
 
-	"github.com/puppe1990/cais/pkg/cais/migrate"
+	"github.com/puppe1990/amarra-cais/pkg/cais/migrate"
 )
 
 //go:embed migrations/*.sql

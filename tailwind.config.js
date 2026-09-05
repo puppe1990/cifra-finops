@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./web/src/**/*.{html,js,svelte}"],
+  content: ["./web/templates/**/*.html", "./web/static/js/*.js"],
   safelist: [
     "cais-password-wrap",
     "cais-password-toggle",

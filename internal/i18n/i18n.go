@@ -1,7 +1,7 @@
 package i18n
 
 import (
-	caisi18n "github.com/puppe1990/cais/pkg/cais/i18n"
+	caisi18n "github.com/puppe1990/amarra-cais/pkg/cais/i18n"
 )
 
 var locales = map[string]map[string]string{

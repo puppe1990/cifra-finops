@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"github.com/puppe1990/cais/pkg/cais"
-	"github.com/puppe1990/cais/pkg/cais/console"
+	"github.com/puppe1990/amarra-cais/pkg/cais"
+	"github.com/puppe1990/amarra-cais/pkg/cais/console"
 
 	"github.com/puppe1990/aws-finops/internal/store"
 )

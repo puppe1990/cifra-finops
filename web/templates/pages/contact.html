@@ -1,0 +1,14 @@
+{{ define "content" }}
+<div class="max-w-md mx-auto p-6">
+  <h1 class="text-2xl font-semibold mb-4">{{ index .labels "contact.heading" }}</h1>
+  {{ if .Flash }}<p class="mb-4 text-green-700" data-testid="contact-success">{{ .Flash }}</p>{{ end }}
+  <form action="/contact" method="post" data-amarra-drive="true">
+    {{ csrfField .CSRFToken }}
+    <input type="text" name="name" placeholder="Name" class="block w-full border p-2" />
+    {{ if .Errors }}{{ with index .Errors "name" }}<p class="text-red-600 text-sm">{{ . }}</p>{{ end }}{{ end }}
+    <input type="email" name="email" placeholder="Email" class="block w-full border p-2 mt-2" />
+    {{ if .Errors }}{{ with index .Errors "email" }}<p class="text-red-600 text-sm">{{ . }}</p>{{ end }}{{ end }}
+    <button type="submit" class="mt-4 px-4 py-2 bg-amber-800 text-white">Send</button>
+  </form>
+</div>
+{{ end }}

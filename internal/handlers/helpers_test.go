@@ -5,9 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/puppe1990/cais/pkg/cais"
-	"github.com/puppe1990/cais/pkg/cais/i18n"
-	"github.com/puppe1990/cais/pkg/cais/meta"
+	"github.com/puppe1990/amarra-cais/pkg/amarra/view"
+	"github.com/puppe1990/amarra-cais/pkg/cais/meta"
 
 	"github.com/puppe1990/aws-finops/internal/store"
 )
@@ -34,18 +33,8 @@ func projectRoot(t *testing.T) string {
 	}
 }
 
-func setupTestRenderer(t *testing.T) *cais.Renderer {
-	t.Helper()
-	root := projectRoot(t)
-	layout := filepath.Join(root, "web", "templates", "layouts", "base.html")
-	if _, err := os.Stat(layout); err != nil {
-		return cais.NewRendererStub(i18n.DefaultCatalog())
-	}
-	r, err := cais.NewRendererFromDir(filepath.Join(root, "web", "templates"), i18n.DefaultCatalog())
-	if err != nil {
-		t.Fatal(err)
-	}
-	return r
+func setupTestRenderer(t *testing.T) *view.Renderer {
+	return setupTestViews(t)
 }
 
 func setupTestStore(t *testing.T) store.Store {

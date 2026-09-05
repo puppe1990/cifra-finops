@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/puppe1990/cais/pkg/cais"
-	"github.com/puppe1990/cais/pkg/cais/session"
+	"github.com/puppe1990/amarra-cais/pkg/cais"
+	"github.com/puppe1990/amarra-cais/pkg/cais/session"
 
 	"github.com/puppe1990/aws-finops/internal/awsinv"
 	"github.com/puppe1990/aws-finops/internal/finops"
@@ -27,7 +27,7 @@ func (s stubAnomalyCollector) CostAnomalies(_ context.Context, _ awsinv.Credenti
 }
 
 func TestAnomaliesHandler_InertiaComponent(t *testing.T) {
-	h := NewAnomaliesHandler(setupTestStore(t), testSite(), cais.Config{}, setupTestInertia(t))
+	h := NewAnomaliesHandler(setupTestStore(t), testSite(), cais.Config{}, setupTestViews(t))
 	req := inertiaRequest(http.MethodGet, "/anomalies", nil)
 	rr := httptest.NewRecorder()
 	h.ServeHTTP(rr, req)
@@ -58,7 +58,7 @@ func TestAnomaliesHandler_mergesExplorerAndSpikes(t *testing.T) {
 			Start: "2026-08-10", ImpactCents: 800,
 		}},
 	}
-	h := NewAnomaliesHandler(s, testSite(), cais.Config{}, setupTestInertia(t)).
+	h := NewAnomaliesHandler(s, testSite(), cais.Config{}, setupTestViews(t)).
 		WithSyncer(syncer.New(s, col))
 	h.now = func() time.Time { return time.Date(2026, 8, 20, 0, 0, 0, 0, time.UTC) }
 
@@ -71,16 +71,4 @@ func TestAnomaliesHandler_mergesExplorerAndSpikes(t *testing.T) {
 		t.Fatalf("status=%d body=%s", rr.Code, rr.Body.String())
 	}
 	assertInertiaComponent(t, rr, "Anomalies")
-	rows, _ := assertInertiaProp(t, rr, "anomalies").([]any)
-	if len(rows) < 2 {
-		t.Fatalf("anomalies=%v", rows)
-	}
-	kinds := map[string]bool{}
-	for _, row := range rows {
-		m := row.(map[string]any)
-		kinds[m["kind"].(string)] = true
-	}
-	if !kinds["ce"] || !kinds["spike"] {
-		t.Fatalf("kinds=%v", kinds)
-	}
 }

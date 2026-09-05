@@ -1,0 +1,35 @@
+{{ define "auth" }}
+<!doctype html>
+<html lang="{{ if .htmlLang }}{{ .htmlLang }}{{ else }}en{{ end }}">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    {{ if .CSRFToken }}<meta name="csrf-token" content="{{ .CSRFToken }}" />{{ end }}
+    <title>{{ if .Title }}{{ .Title }} · Cifra{{ else }}Cifra{{ end }}</title>
+    <link rel="stylesheet" href="/static/css/styles.css" />
+    <meta name="theme-color" content="#121816" />
+    <script>
+      try {
+        if (localStorage.getItem("cifra-theme") === "light") document.documentElement.classList.add("light");
+      } catch (e) {}
+    </script>
+    <script src="/static/js/amarra.js" defer></script>
+    <script src="/static/js/cifra.js" defer></script>
+  </head>
+  <body>
+    <main id="amarra-main" class="relative flex min-h-screen items-center justify-center bg-ink-950 px-4 py-12 text-paper-50">
+      <div class="pointer-events-none absolute inset-0 opacity-[0.08]" style="background-image: radial-gradient(rgb(var(--grain) / 0.9) 0.7px, transparent 0.7px); background-size: 8px 8px;"></div>
+      <div class="relative w-full max-w-md">
+        <div class="mb-4 flex justify-center">{{ template "locale_toggle" . }}</div>
+        <p class="mb-2 text-center font-mono text-[10px] uppercase tracking-[0.35em] text-copper-400">{{ index .labels "auth.tagline" }}</p>
+        <h1 class="mb-8 text-center font-display text-5xl text-paper-50">{{ if .Site }}{{ .Site.AppName }}{{ else }}Cifra{{ end }}</h1>
+        <div class="border border-paper-200/20 bg-ink-900 p-7 shadow-[8px_8px_0_0_#c4622d]">
+          {{ if .AuthTitle }}<h2 class="mb-5 font-display text-2xl text-paper-50">{{ .AuthTitle }}</h2>{{ end }}
+          {{ if .Flash }}<div class="mb-4 font-mono text-xs text-copper-400" role="status">{{ .Flash }}</div>{{ end }}
+          {{ template "content" . }}
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
+{{ end }}

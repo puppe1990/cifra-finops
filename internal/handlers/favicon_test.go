@@ -9,7 +9,7 @@ import (
 
 func TestAppHTML_linksFaviconSVG(t *testing.T) {
 	root := projectRoot(t)
-	html, err := os.ReadFile(filepath.Join(root, "web/templates/app.html"))
+	html, err := os.ReadFile(filepath.Join(root, "web/templates/layouts/app.html"))
 	if err != nil {
 		t.Fatal(err)
 	}

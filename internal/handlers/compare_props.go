@@ -4,7 +4,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/puppe1990/cais/pkg/cais/i18n"
+	"github.com/puppe1990/amarra-cais/pkg/cais/i18n"
 
 	"github.com/puppe1990/aws-finops/internal/awsinv"
 	"github.com/puppe1990/aws-finops/internal/models"
@@ -20,14 +20,28 @@ func MonthDeltaBps(curr, prev int64) (int64, bool) {
 func compareMonthRows(months []awsinv.MonthCost, cat *i18n.Catalog, now time.Time) []map[string]any {
 	now = time.Date(now.UTC().Year(), now.UTC().Month(), 1, 0, 0, 0, 0, time.UTC)
 	n := len(months)
+	var max int64
+	for _, m := range months {
+		if m.Cents > max {
+			max = m.Cents
+		}
+	}
 	out := make([]map[string]any, n)
 	for i := n - 1; i >= 0; i-- {
 		m := months[i]
+		pct := 4
+		if max > 0 {
+			pct = int(m.Cents * 100 / max)
+			if pct < 4 && m.Cents > 0 {
+				pct = 4
+			}
+		}
 		row := map[string]any{
 			"query":   m.Query,
 			"label":   ledgerMonthLabel(cat, awsinv.LedgerMonth{Period: m.Period}),
 			"cents":   m.Cents,
 			"usd":     formatUSD(m.Cents),
+			"pct":     pct,
 			"current": m.Period.Equal(now),
 		}
 		if i > 0 {

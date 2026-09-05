@@ -3,25 +3,25 @@ package app
 import (
 	"net/http"
 
-	"github.com/puppe1990/cais/pkg/cais"
-	"github.com/puppe1990/cais/pkg/cais/middleware"
+	"github.com/puppe1990/amarra-cais/pkg/cais"
+	"github.com/puppe1990/amarra-cais/pkg/cais/middleware"
 
 	"github.com/puppe1990/aws-finops/internal/handlers"
 )
 
 func registerRoutes(r *cais.Router, deps Deps, cfg cais.Config) {
-	home := handlers.NewHomeHandler(deps.Renderer, deps.Site, deps.Catalog, cfg, deps.Inertia)
-	contact := handlers.NewContactHandler(deps.Renderer, deps.Store, deps.Site, deps.Catalog, cfg, deps.Inertia)
-	dashboard := handlers.NewDashboardHandler(deps.Renderer, deps.Store, deps.Site, cfg, deps.Inertia).WithSyncer(deps.Syncer)
-	compare := handlers.NewCompareHandler(deps.Store, deps.Site, cfg, deps.Inertia).WithSyncer(deps.Syncer)
-	anomalies := handlers.NewAnomaliesHandler(deps.Store, deps.Site, cfg, deps.Inertia).WithSyncer(deps.Syncer)
-	auth := handlers.NewAuthHandler(deps.Renderer, deps.Store, deps.Site, deps.Store.Sessions(), cfg, deps.Catalog, deps.Inertia)
-	accounts := handlers.NewAccountsHandler(deps.Store, deps.Site, cfg, deps.Inertia, deps.AppSecret).WithSyncer(deps.Syncer)
-	resources := handlers.NewResourcesHandler(deps.Store, deps.Site, deps.Inertia)
-	budgets := handlers.NewBudgetsHandler(deps.Store, deps.Site, cfg, deps.Inertia)
-	tenants := handlers.NewTenantsHandler(deps.Store, deps.Site, cfg, deps.Inertia)
-	settings := handlers.NewSettingsHandler(deps.Store, deps.Site, deps.Inertia)
-	loc := handlers.NewLocaleHandler(cfg, deps.Inertia)
+	home := handlers.NewHomeHandler(nil, deps.Site, deps.Catalog, cfg, deps.Views)
+	contact := handlers.NewContactHandler(nil, deps.Store, deps.Site, deps.Catalog, cfg, deps.Views)
+	dashboard := handlers.NewDashboardHandler(nil, deps.Store, deps.Site, cfg, deps.Views).WithSyncer(deps.Syncer)
+	compare := handlers.NewCompareHandler(deps.Store, deps.Site, cfg, deps.Views).WithSyncer(deps.Syncer)
+	anomalies := handlers.NewAnomaliesHandler(deps.Store, deps.Site, cfg, deps.Views).WithSyncer(deps.Syncer)
+	auth := handlers.NewAuthHandler(nil, deps.Store, deps.Site, deps.Store.Sessions(), cfg, deps.Catalog, deps.Views)
+	accounts := handlers.NewAccountsHandler(deps.Store, deps.Site, cfg, deps.Views, deps.AppSecret).WithSyncer(deps.Syncer)
+	resources := handlers.NewResourcesHandler(deps.Store, deps.Site, cfg, deps.Views)
+	budgets := handlers.NewBudgetsHandler(deps.Store, deps.Site, cfg, deps.Views)
+	tenants := handlers.NewTenantsHandler(deps.Store, deps.Site, cfg, deps.Views)
+	settings := handlers.NewSettingsHandler(deps.Store, deps.Site, cfg, deps.Views)
+	loc := handlers.NewLocaleHandler(cfg, deps.Views)
 
 	loginLimit := middleware.NewRateLimiter(10, cfg)
 	resetLimit := middleware.NewRateLimiter(10, cfg)

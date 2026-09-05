@@ -3,8 +3,9 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/puppe1990/cais/pkg/cais/meta"
-	inertia "github.com/romsar/gonertia/v3"
+	"github.com/puppe1990/amarra-cais/pkg/amarra/view"
+	"github.com/puppe1990/amarra-cais/pkg/cais"
+	"github.com/puppe1990/amarra-cais/pkg/cais/meta"
 
 	"github.com/puppe1990/aws-finops/internal/awsinv"
 	"github.com/puppe1990/aws-finops/internal/finops"
@@ -12,24 +13,25 @@ import (
 )
 
 type SettingsHandler struct {
-	store   store.Store
-	site    meta.Site
-	inertia *inertia.Inertia
+	store store.Store
+	site  meta.Site
+	cfg   cais.Config
+	views *view.Renderer
 }
 
-func NewSettingsHandler(s store.Store, site meta.Site, i *inertia.Inertia) *SettingsHandler {
-	return &SettingsHandler{store: s, site: site, inertia: i}
+func NewSettingsHandler(s store.Store, site meta.Site, cfg cais.Config, views *view.Renderer) *SettingsHandler {
+	return &SettingsHandler{store: s, site: site, cfg: cfg, views: views}
 }
 
 func (h *SettingsHandler) Get(w http.ResponseWriter, r *http.Request) {
 	ws, err := loadWorkspace(h.store, r)
 	if err != nil {
-		h.inertia.Redirect(w, r, "/login", http.StatusSeeOther)
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 	props := shellProps(h.site, r, h.store, ws)
 	props["policy"] = awsinv.FinOpsIAMPolicy
 	props["cloudShell"] = awsinv.CloudShellCommand()
 	props["seededAccount"] = finops.SeedAWSAccountID()
-	_ = h.inertia.Render(w, r, "Settings", props)
+	writePage(w, r, h.views, h.cfg, "app", "settings", props, 0)
 }

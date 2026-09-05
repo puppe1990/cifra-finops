@@ -6,10 +6,10 @@ import (
 	"sort"
 	"time"
 
-	"github.com/puppe1990/cais/pkg/cais"
-	"github.com/puppe1990/cais/pkg/cais/flash"
-	"github.com/puppe1990/cais/pkg/cais/meta"
-	inertia "github.com/romsar/gonertia/v3"
+	"github.com/puppe1990/amarra-cais/pkg/amarra/view"
+	"github.com/puppe1990/amarra-cais/pkg/cais"
+	"github.com/puppe1990/amarra-cais/pkg/cais/flash"
+	"github.com/puppe1990/amarra-cais/pkg/cais/meta"
 
 	"github.com/puppe1990/aws-finops/internal/awsinv"
 	"github.com/puppe1990/aws-finops/internal/store"
@@ -17,16 +17,16 @@ import (
 )
 
 type AnomaliesHandler struct {
-	store   store.Store
-	site    meta.Site
-	cfg     cais.Config
-	inertia *inertia.Inertia
-	syncer  *syncer.Syncer
-	now     func() time.Time
+	store  store.Store
+	site   meta.Site
+	cfg    cais.Config
+	views  *view.Renderer
+	syncer *syncer.Syncer
+	now    func() time.Time
 }
 
-func NewAnomaliesHandler(s store.Store, site meta.Site, cfg cais.Config, i *inertia.Inertia) *AnomaliesHandler {
-	return &AnomaliesHandler{store: s, site: site, cfg: cfg, inertia: i}
+func NewAnomaliesHandler(s store.Store, site meta.Site, cfg cais.Config, views *view.Renderer) *AnomaliesHandler {
+	return &AnomaliesHandler{store: s, site: site, cfg: cfg, views: views}
 }
 
 func (h *AnomaliesHandler) WithSyncer(s *syncer.Syncer) *AnomaliesHandler {
@@ -36,17 +36,17 @@ func (h *AnomaliesHandler) WithSyncer(s *syncer.Syncer) *AnomaliesHandler {
 
 func (h *AnomaliesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ws, err := loadWorkspace(h.store, r)
-	props := inertia.Props{
+	props := map[string]any{
 		"site":      meta.ForRequest(h.site, r),
 		"anomalies": []any{},
 		"ceDenied":  false,
-		"flash":     inertia.Flash{},
+		"flash":     map[string]string{},
 	}
 	if msg, ok := flash.MessageFromRequest(r); ok {
-		props["flash"] = inertia.Flash{msg.Kind: msg.Message}
+		props["flash"] = map[string]string{msg.Kind: msg.Message}
 	}
 	if err != nil {
-		_ = h.inertia.Render(w, r, "Anomalies", props)
+		writePage(w, r, h.views, h.cfg, "app", "anomalies", props, 0)
 		return
 	}
 
@@ -61,7 +61,7 @@ func (h *AnomaliesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	props["anomalies"] = anomalyProps(items)
 	props["ceDenied"] = items.denied
-	_ = h.inertia.Render(w, r, "Anomalies", props)
+	writePage(w, r, h.views, h.cfg, "app", "anomalies", props, 0)
 }
 
 type anomalyBag struct {

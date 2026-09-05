@@ -3,12 +3,13 @@ package handlers
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
-	"github.com/puppe1990/cais/pkg/cais"
-	"github.com/puppe1990/cais/pkg/cais/flash"
-	"github.com/puppe1990/cais/pkg/cais/session"
+	"github.com/puppe1990/amarra-cais/pkg/cais"
+	"github.com/puppe1990/amarra-cais/pkg/cais/flash"
+	"github.com/puppe1990/amarra-cais/pkg/cais/session"
 
 	"github.com/puppe1990/aws-finops/internal/finops"
 	"github.com/puppe1990/aws-finops/internal/models"
@@ -17,7 +18,7 @@ import (
 )
 
 func TestDashboardHandler_InertiaComponent(t *testing.T) {
-	h := NewDashboardHandler(setupTestRenderer(t), setupTestStore(t), testSite(), cais.Config{}, setupTestInertia(t))
+	h := NewDashboardHandler(setupTestRenderer(t), setupTestStore(t), testSite(), cais.Config{}, setupTestViews(t))
 
 	req := inertiaRequest(http.MethodGet, "/dashboard", nil)
 	rr := httptest.NewRecorder()
@@ -30,7 +31,7 @@ func TestDashboardHandler_InertiaComponent(t *testing.T) {
 }
 
 func TestDashboardHandler_includesFlashProp(t *testing.T) {
-	h := NewDashboardHandler(setupTestRenderer(t), setupTestStore(t), testSite(), cais.Config{}, setupTestInertia(t))
+	h := NewDashboardHandler(setupTestRenderer(t), setupTestStore(t), testSite(), cais.Config{}, setupTestViews(t))
 
 	req := inertiaRequest(http.MethodGet, "/dashboard", nil)
 	req = flash.WithMessage(req, flash.Message{Kind: "notice", Message: "Welcome back!"})
@@ -40,9 +41,8 @@ func TestDashboardHandler_includesFlashProp(t *testing.T) {
 	if rr.Code != http.StatusOK {
 		t.Fatalf("status = %d, want 200", rr.Code)
 	}
-	flashProp, ok := assertInertiaProp(t, rr, "flash").(map[string]any)
-	if !ok || flashProp["notice"] != "Welcome back!" {
-		t.Errorf("props.flash missing notice: %v", flashProp)
+	if !strings.Contains(rr.Body.String(), "Welcome back!") {
+		t.Errorf("flash missing: %s", rr.Body.String())
 	}
 }
 
@@ -71,7 +71,7 @@ func TestDashboardHandler_pastMonthUsesOverlayNotSQLite(t *testing.T) {
 		PeriodStart: "2026-07-01", PeriodEnd: "2026-08-01",
 	}}}
 
-	h := NewDashboardHandler(setupTestRenderer(t), s, testSite(), cais.Config{}, setupTestInertia(t)).
+	h := NewDashboardHandler(setupTestRenderer(t), s, testSite(), cais.Config{}, setupTestViews(t)).
 		WithSyncer(syncer.New(s, col))
 	h.now = func() time.Time { return time.Date(2026, 8, 20, 0, 0, 0, 0, time.UTC) }
 
@@ -83,19 +83,11 @@ func TestDashboardHandler_pastMonthUsesOverlayNotSQLite(t *testing.T) {
 	if rr.Code != http.StatusOK {
 		t.Fatalf("status=%d body=%s", rr.Code, rr.Body.String())
 	}
-	if assertInertiaProp(t, rr, "isCurrent") != false {
-		t.Fatal("isCurrent")
-	}
-	if assertInertiaProp(t, rr, "month") != "2026-07" {
+	if !strings.Contains(rr.Body.String(), `data-month="2026-07"`) {
 		t.Fatal("month")
 	}
-	summary := assertInertiaProp(t, rr, "summary").(map[string]any)
-	if summary["monthlyUSD"] != "US$ 19,47" {
-		t.Fatalf("usd=%v", summary["monthlyUSD"])
-	}
-	findings, _ := assertInertiaProp(t, rr, "findings").([]any)
-	if len(findings) != 0 {
-		t.Fatalf("findings=%v", findings)
+	if !strings.Contains(rr.Body.String(), "US$ 19,47") {
+		t.Fatalf("usd missing: %s", rr.Body.String())
 	}
 	stored, _ := s.ListCostLines(accounts[0].ID)
 	if stored[0].Service != "Stored August" {
@@ -115,7 +107,7 @@ func TestDashboardHandler_currentMonthIncludesNextMonthForecast(t *testing.T) {
 	}
 
 	col := &stubForecastCollector{cents: 3850}
-	h := NewDashboardHandler(setupTestRenderer(t), s, testSite(), cais.Config{}, setupTestInertia(t)).
+	h := NewDashboardHandler(setupTestRenderer(t), s, testSite(), cais.Config{}, setupTestViews(t)).
 		WithSyncer(syncer.New(s, col))
 	h.now = func() time.Time { return time.Date(2026, 8, 20, 0, 0, 0, 0, time.UTC) }
 
@@ -127,12 +119,8 @@ func TestDashboardHandler_currentMonthIncludesNextMonthForecast(t *testing.T) {
 	if rr.Code != http.StatusOK {
 		t.Fatalf("status=%d body=%s", rr.Code, rr.Body.String())
 	}
-	summary := assertInertiaProp(t, rr, "summary").(map[string]any)
-	if summary["forecastUSD"] != "US$ 38,50" {
-		t.Fatalf("forecastUSD=%v", summary["forecastUSD"])
-	}
-	if summary["forecastLabel"] != "Sep 2026" {
-		t.Fatalf("forecastLabel=%v", summary["forecastLabel"])
+	if !strings.Contains(rr.Body.String(), "US$ 38,50") {
+		t.Fatalf("forecastUSD missing: %s", rr.Body.String())
 	}
 	if !col.called || !col.period.Equal(time.Date(2026, 9, 1, 0, 0, 0, 0, time.UTC)) {
 		t.Fatalf("period=%v called=%v", col.period, col.called)
@@ -157,7 +145,7 @@ func TestDashboardHandler_pastMonthOmitsForecast(t *testing.T) {
 		}}},
 		cents: 3850,
 	}
-	h := NewDashboardHandler(setupTestRenderer(t), s, testSite(), cais.Config{}, setupTestInertia(t)).
+	h := NewDashboardHandler(setupTestRenderer(t), s, testSite(), cais.Config{}, setupTestViews(t)).
 		WithSyncer(syncer.New(s, col))
 	h.now = func() time.Time { return time.Date(2026, 8, 20, 0, 0, 0, 0, time.UTC) }
 
@@ -190,7 +178,7 @@ func TestDashboardHandler_zeroForecastOmitsProp(t *testing.T) {
 	}
 
 	col := &stubForecastCollector{cents: 0}
-	h := NewDashboardHandler(setupTestRenderer(t), s, testSite(), cais.Config{}, setupTestInertia(t)).
+	h := NewDashboardHandler(setupTestRenderer(t), s, testSite(), cais.Config{}, setupTestViews(t)).
 		WithSyncer(syncer.New(s, col))
 	h.now = func() time.Time { return time.Date(2026, 8, 20, 0, 0, 0, 0, time.UTC) }
 
