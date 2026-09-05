@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/puppe1990/cais/pkg/cais"
-	"github.com/puppe1990/cais/pkg/cais/i18n"
+	"github.com/puppe1990/amarra-cais/pkg/cais"
+	"github.com/puppe1990/amarra-cais/pkg/cais/i18n"
 
 	"github.com/puppe1990/aws-finops/internal/store"
 )
@@ -20,7 +20,7 @@ func newAuthHandlerForSignup(t *testing.T) (*AuthHandler, store.Store) {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = s.Close() })
-	h := NewAuthHandler(setupTestRenderer(t), s, testSite(), s.Sessions(), cais.Config{}, i18n.DefaultCatalog(), setupTestInertia(t))
+	h := NewAuthHandler(setupTestRenderer(t), s, testSite(), s.Sessions(), cais.Config{}, i18n.DefaultCatalog(), setupTestViews(t))
 	return h, s
 }
 
@@ -71,8 +71,8 @@ func TestAuth_SignUpPost_duplicateEmail_returnsError(t *testing.T) {
 	req2.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	rr2 := httptest.NewRecorder()
 	h.SignUpPost(rr2, req2)
-	if rr2.Code != http.StatusOK {
-		t.Fatalf("duplicate signup status = %d, want 200", rr2.Code)
+	if rr2.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("duplicate signup status = %d, want 422", rr2.Code)
 	}
 	assertInertiaComponent(t, rr2, "Signup")
 	assertInertiaErrors(t, rr2, "email")

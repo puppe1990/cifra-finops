@@ -1,0 +1,30 @@
+{{ define "content" }}
+<h2 class="font-display text-4xl">{{ index .labels "res.title" }}</h2>
+<p class="mt-2 max-w-2xl text-sm text-paper-200">{{ index .labels "res.lead" }}</p>
+<div class="mt-8 overflow-x-auto border border-paper-200/15">
+  <table class="w-full text-left text-sm">
+    <thead class="bg-ink-800 font-mono text-[10px] uppercase tracking-widest text-paper-200">
+      <tr>
+        <th class="px-3 py-2">{{ index .labels "dash.col_resource" }}</th>
+        <th class="px-3 py-2">{{ index .labels "dash.col_type" }}</th>
+        <th class="px-3 py-2">{{ index .labels "dash.col_region" }}</th>
+        <th class="px-3 py-2">{{ index .labels "dash.col_state" }}</th>
+        <th class="px-3 py-2 text-right">{{ index .labels "res.estimate_month" }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{ range .resources }}
+      <tr class="border-t border-ink-700 bg-ink-900">
+        <td class="px-3 py-2 font-mono">{{ .name }}</td>
+        <td class="px-3 py-2">{{ .label }}</td>
+        <td class="px-3 py-2">{{ .region }}</td>
+        <td class="px-3 py-2">{{ if .state }}{{ .state }}{{ else }}—{{ end }}</td>
+        <td class="px-3 py-2 text-right font-mono text-copper-400">{{ .usd }}</td>
+      </tr>
+      {{ else }}
+      <tr><td class="px-3 py-6" colspan="5">{{ index .labels "res.empty" }}</td></tr>
+      {{ end }}
+    </tbody>
+  </table>
+</div>
+{{ end }}

@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/puppe1990/cais/pkg/cais"
-	"github.com/puppe1990/cais/pkg/cais/session"
+	"github.com/puppe1990/amarra-cais/pkg/cais"
+	"github.com/puppe1990/amarra-cais/pkg/cais/session"
 
 	"github.com/puppe1990/aws-finops/internal/crypto"
 	"github.com/puppe1990/aws-finops/internal/finops"
@@ -26,7 +26,7 @@ func TestAccountsHandler_Create_updatesExistingToAccessKeys(t *testing.T) {
 	}
 
 	key := crypto.DeriveKey("test-secret")
-	h := NewAccountsHandler(s, testSite(), cais.Config{}, setupTestInertia(t), key)
+	h := NewAccountsHandler(s, testSite(), cais.Config{}, setupTestViews(t), key)
 	body := `{"aws_account_id":"111111111111","alias":"principal","region":"us-east-1","auth_mode":"access_keys","access_key_id":"AKIATEST","secret_access_key":"secret"}`
 	req := inertiaRequest(http.MethodPost, "/accounts", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")

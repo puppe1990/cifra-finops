@@ -6,11 +6,10 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/puppe1990/cais/pkg/cais/flash"
-	"github.com/puppe1990/cais/pkg/cais/i18n"
-	"github.com/puppe1990/cais/pkg/cais/meta"
-	"github.com/puppe1990/cais/pkg/cais/session"
-	inertia "github.com/romsar/gonertia/v3"
+	"github.com/puppe1990/amarra-cais/pkg/cais/flash"
+	"github.com/puppe1990/amarra-cais/pkg/cais/i18n"
+	"github.com/puppe1990/amarra-cais/pkg/cais/meta"
+	"github.com/puppe1990/amarra-cais/pkg/cais/session"
 
 	"github.com/puppe1990/aws-finops/internal/finops"
 	appi18n "github.com/puppe1990/aws-finops/internal/i18n"
@@ -86,21 +85,21 @@ func requestCatalog(r *http.Request, fallback string) *i18n.Catalog {
 	return appi18n.NewCatalog(locale.FromRequest(r, fallback))
 }
 
-func publicProps(site meta.Site, r *http.Request, fallback string) inertia.Props {
+func publicProps(site meta.Site, r *http.Request, fallback string) map[string]any {
 	loc := locale.FromRequest(r, fallback)
-	props := inertia.Props{
+	props := map[string]any{
 		"site":     meta.ForRequest(site, r),
 		"locale":   loc,
 		"htmlLang": appi18n.NewCatalog(loc).HTMLLang(),
 		"labels":   appi18n.Labels(loc),
 	}
 	if msg, ok := flash.MessageFromRequest(r); ok {
-		props["flash"] = inertia.Flash{msg.Kind: msg.Message}
+		props["flash"] = map[string]string{msg.Kind: msg.Message}
 	}
 	return props
 }
 
-func shellProps(hSite meta.Site, r *http.Request, s store.Store, ws workspace) inertia.Props {
+func shellProps(hSite meta.Site, r *http.Request, s store.Store, ws workspace) map[string]any {
 	tenants, _ := s.ListTenantsForUser(ws.User.ID)
 	props := publicProps(hSite, r, "en")
 	props["userEmail"] = ws.User.Email

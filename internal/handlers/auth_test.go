@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/puppe1990/cais/pkg/cais"
-	"github.com/puppe1990/cais/pkg/cais/i18n"
-	"github.com/puppe1990/cais/pkg/cais/session"
+	"github.com/puppe1990/amarra-cais/pkg/cais"
+	"github.com/puppe1990/amarra-cais/pkg/cais/i18n"
+	"github.com/puppe1990/amarra-cais/pkg/cais/session"
 
 	"github.com/puppe1990/aws-finops/internal/store"
 )
@@ -17,7 +17,7 @@ import (
 func newAuthHandler(t *testing.T) (*AuthHandler, store.Store) {
 	t.Helper()
 	s := setupTestStore(t)
-	h := NewAuthHandler(setupTestRenderer(t), s, testSite(), s.Sessions(), cais.Config{}, i18n.DefaultCatalog(), setupTestInertia(t))
+	h := NewAuthHandler(setupTestRenderer(t), s, testSite(), s.Sessions(), cais.Config{}, i18n.DefaultCatalog(), setupTestViews(t))
 	return h, s
 }
 
@@ -44,8 +44,8 @@ func TestAuth_LoginPost_invalidCredentials(t *testing.T) {
 	rr := httptest.NewRecorder()
 	h.LoginPost(rr, req)
 
-	if rr.Code != http.StatusOK {
-		t.Errorf("status = %d, want 200", rr.Code)
+	if rr.Code != http.StatusUnprocessableEntity {
+		t.Errorf("status = %d, want 422", rr.Code)
 	}
 	assertInertiaComponent(t, rr, "Login")
 	assertInertiaErrors(t, rr, "email")
@@ -57,7 +57,7 @@ func TestAuth_LoginPost_validCredentials_redirects(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = s.Close() })
-	h := NewAuthHandler(setupTestRenderer(t), s, testSite(), s.Sessions(), cais.Config{}, i18n.DefaultCatalog(), setupTestInertia(t))
+	h := NewAuthHandler(setupTestRenderer(t), s, testSite(), s.Sessions(), cais.Config{}, i18n.DefaultCatalog(), setupTestViews(t))
 
 	form := url.Values{"email": {"demo@example.com"}, "password": {"password"}}
 	req := httptest.NewRequest(http.MethodPost, "/login", strings.NewReader(form.Encode()))

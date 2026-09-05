@@ -10,10 +10,10 @@ import (
 
 	_ "modernc.org/sqlite"
 
-	"github.com/puppe1990/cais/pkg/cais/devlog"
-	"github.com/puppe1990/cais/pkg/cais/session"
-	caissqlite "github.com/puppe1990/cais/pkg/cais/sqlite"
-	"github.com/puppe1990/cais/pkg/cais/sqllog"
+	"github.com/puppe1990/amarra-cais/pkg/cais/devlog"
+	"github.com/puppe1990/amarra-cais/pkg/cais/session"
+	caissqlite "github.com/puppe1990/amarra-cais/pkg/cais/sqlite"
+	"github.com/puppe1990/amarra-cais/pkg/cais/sqllog"
 
 	"github.com/puppe1990/aws-finops/internal/models"
 )

@@ -1,0 +1,20 @@
+{{ define "public" }}
+<!doctype html>
+<html lang="{{ if .htmlLang }}{{ .htmlLang }}{{ else }}en{{ end }}">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    {{ if .CSRFToken }}<meta name="csrf-token" content="{{ .CSRFToken }}" />{{ end }}
+    <title>{{ if .Title }}{{ .Title }}{{ else }}Cifra · FinOps AWS{{ end }}</title>
+    <link rel="stylesheet" href="/static/css/styles.css" />
+    <meta name="theme-color" content="#121816" />
+    <script src="/static/js/amarra.js" defer></script>
+    <script src="/static/js/cifra.js" defer></script>
+  </head>
+  <body>
+    <div id="amarra-main" class="relative min-h-screen overflow-hidden bg-ink-950 text-paper-50">
+      {{ template "content" . }}
+    </div>
+  </body>
+</html>
+{{ end }}

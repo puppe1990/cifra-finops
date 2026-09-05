@@ -31,7 +31,7 @@ Before writing production code:
 | ------------------------ | -------------------------------- |
 | `cmd/server/`            | Entry point                      |
 | `internal/app/`          | Bootstrap, `registerRoutes`      |
-| `internal/handlers/`     | HTTP handlers (Inertia + Svelte) |
+| `internal/handlers/`     | HTTP handlers (`view.Write`)     |
 | `internal/store/`        | SQLite + migrations              |
 | `internal/models/`       | Domain structs                   |
 | `web/templates/app.html` | Inertia root shell               |
@@ -43,7 +43,7 @@ Patch markers (do not remove): `registerRoutes`, `Close() error`, `<!-- cais:nav
 
 ## Inertia + Svelte
 
-Handlers render **Inertia + Svelte** only:
+Handlers render **Amarra HTML** (`view.Write`). Inertia + Svelte is gone.
 
 ```go
 _ = h.inertia.Render(w, r, "Contact", inertia.Props{"site": meta.ForRequest(h.site, r)})

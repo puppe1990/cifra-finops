@@ -6,13 +6,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/puppe1990/cais/pkg/cais"
-	"github.com/puppe1990/cais/pkg/cais/i18n"
+	"github.com/puppe1990/amarra-cais/pkg/cais"
+	"github.com/puppe1990/amarra-cais/pkg/cais/i18n"
 )
 
 func newHomeHandler(t *testing.T) *HomeHandler {
 	t.Helper()
-	return NewHomeHandler(setupTestRenderer(t), testSite(), i18n.DefaultCatalog(), cais.Config{}, setupTestInertia(t))
+	return NewHomeHandler(setupTestRenderer(t), testSite(), i18n.DefaultCatalog(), cais.Config{}, setupTestViews(t))
 }
 
 func TestHomeHandler_Returns200(t *testing.T) {
@@ -45,8 +45,8 @@ func TestHomeHandler_InertiaShell(t *testing.T) {
 	h.ServeHTTP(rr, req)
 
 	body := rr.Body.String()
-	if !strings.Contains(body, `id="app"`) && !strings.Contains(body, "data-page") {
-		t.Errorf("body missing Inertia shell markers, got: %s", body)
+	if !strings.Contains(body, `id="amarra-main"`) {
+		t.Errorf("body missing #amarra-main, got: %s", body)
 	}
 }
 

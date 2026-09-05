@@ -1,6 +1,6 @@
 # Cifra — AWS FinOps
 
-Multi-tenant AWS FinOps, built with [Cais](https://github.com/puppe1990/cais) (Go + Inertia + Svelte + SQLite).
+Multi-tenant AWS FinOps, built with [amarra-cais](https://github.com/puppe1990/amarra-cais) (Go + Amarra Views + Drive + SQLite).
 
 The app UI is available in **English** and **Brazilian Portuguese**. Use the **EN / PT** control in the sidebar (and on the public pages) to switch. The choice is stored in the `cifra_locale` cookie.
 
@@ -16,8 +16,8 @@ Development login: `demo@example.com` / `password`.
 
 ## Stack
 
-- Go 1.26 + Cais + gonertia
-- Svelte 5 + Tailwind
+- Go 1.26 + [amarra-cais](https://github.com/puppe1990/amarra-cais) (Amarra Views + Drive)
+- Tailwind 3 (no Vite / Svelte)
 - SQLite
 - AWS SDK v2 (Cost Explorer, Lightsail, S3, STS)
 
@@ -27,8 +27,8 @@ Development login: `demo@example.com` / `password`.
 export PATH="$HOME/go/bin:$PATH"
 export LOCALE=en
 cp .env.example .env   # set CIFRA_SEED_AWS_ACCOUNT_ID if you want a seeded account
-cais install
-cais dev               # http://localhost:8080
+amarra-cais install
+amarra-cais dev        # http://localhost:8080
 ```
 
 The first visit to the ledger syncs accounts on the active workspace (local `~/.aws` chain or tenant access keys).
@@ -50,7 +50,5 @@ Paste the policy from `/settings` onto a FinOps read role. Without `ce:GetCostAn
 ## Tests
 
 ```bash
-cais test
 go test ./... -count=1
-npm run test:fe
 ```

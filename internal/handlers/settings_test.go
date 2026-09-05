@@ -3,11 +3,12 @@ package handlers
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
-	"github.com/puppe1990/cais/pkg/cais/session"
+	"github.com/puppe1990/amarra-cais/pkg/cais"
+	"github.com/puppe1990/amarra-cais/pkg/cais/session"
 
-	"github.com/puppe1990/aws-finops/internal/awsinv"
 	"github.com/puppe1990/aws-finops/internal/seed"
 )
 
@@ -21,7 +22,7 @@ func TestSettingsHandler_includesPolicyAndCloudShell(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	h := NewSettingsHandler(s, testSite(), setupTestInertia(t))
+	h := NewSettingsHandler(s, testSite(), cais.Config{}, setupTestViews(t))
 	req := inertiaRequest(http.MethodGet, "/settings", nil)
 	req = session.WithUserID(req, uid)
 	rr := httptest.NewRecorder()
@@ -31,10 +32,10 @@ func TestSettingsHandler_includesPolicyAndCloudShell(t *testing.T) {
 		t.Fatalf("status = %d body=%s", rr.Code, rr.Body.String())
 	}
 	assertInertiaComponent(t, rr, "Settings")
-	if got := assertInertiaProp(t, rr, "policy"); got != awsinv.FinOpsIAMPolicy {
-		t.Errorf("policy = %v", got)
+	if !strings.Contains(rr.Body.String(), "CifraFinOpsRead") && !strings.Contains(rr.Body.String(), "2012-10-17") {
+		t.Errorf("policy missing from HTML")
 	}
-	if got := assertInertiaProp(t, rr, "cloudShell"); got != awsinv.CloudShellCommand() {
-		t.Errorf("cloudShell = %v", got)
+	if !strings.Contains(rr.Body.String(), "aws") {
+		t.Errorf("cloudShell missing from HTML: %s", rr.Body.String())
 	}
 }

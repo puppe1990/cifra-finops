@@ -1,0 +1,21 @@
+{{ define "content" }}
+<form action="/signup" method="post" class="space-y-3" data-amarra-drive="true">
+  {{ csrfField .CSRFToken }}
+  <div>
+    <input type="email" name="email" placeholder="Email" class="block w-full border border-paper-200/20 bg-ink-800 p-2.5 text-sm text-paper-50" />
+    {{ if .Errors }}{{ with index .Errors "email" }}<p class="mt-1 text-xs text-copper-400">{{ . }}</p>{{ end }}{{ end }}
+  </div>
+  <div class="relative">
+    <input id="password" type="password" name="password" autocomplete="new-password" class="block w-full border border-paper-200/20 bg-ink-800 p-2.5 text-sm text-paper-50" />
+    <button type="button" class="absolute right-2 top-2 text-paper-200" amarra-hook="password" data-amarra-password-for="#password" aria-pressed="false">show</button>
+    {{ if .Errors }}{{ with index .Errors "password" }}<p class="mt-1 text-xs text-copper-400">{{ . }}</p>{{ end }}{{ end }}
+  </div>
+  <div>
+    <input type="password" name="password_confirmation" autocomplete="new-password" class="block w-full border border-paper-200/20 bg-ink-800 p-2.5 text-sm text-paper-50" />
+  </div>
+  <button type="submit" class="w-full bg-copper-500 px-4 py-2.5 text-sm font-medium text-ink-950">{{ index .labels "auth.signup_submit" }}</button>
+  <p class="pt-1 text-center text-xs text-paper-200">
+    <a href="/login" data-amarra-drive="true" class="text-copper-400 underline">{{ index .labels "auth.login_prompt" }}</a>
+  </p>
+</form>
+{{ end }}

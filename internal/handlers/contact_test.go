@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/puppe1990/cais/pkg/cais"
-	"github.com/puppe1990/cais/pkg/cais/flash"
-	"github.com/puppe1990/cais/pkg/cais/i18n"
+	"github.com/puppe1990/amarra-cais/pkg/cais"
+	"github.com/puppe1990/amarra-cais/pkg/cais/flash"
+	"github.com/puppe1990/amarra-cais/pkg/cais/i18n"
 
 	"github.com/puppe1990/aws-finops/internal/store"
 )
@@ -16,7 +16,7 @@ import (
 func newContactHandler(t *testing.T) (*ContactHandler, store.Store) {
 	t.Helper()
 	s := setupTestStore(t)
-	h := NewContactHandler(setupTestRenderer(t), s, testSite(), i18n.DefaultCatalog(), cais.Config{}, setupTestInertia(t))
+	h := NewContactHandler(setupTestRenderer(t), s, testSite(), i18n.DefaultCatalog(), cais.Config{}, setupTestViews(t))
 	return h, s
 }
 
@@ -41,8 +41,8 @@ func TestContactHandler_Post_MalformedEmail_InertiaErrors(t *testing.T) {
 	rr := httptest.NewRecorder()
 	h.Post(rr, req)
 
-	if rr.Code != http.StatusOK {
-		t.Errorf("status = %d, want 200", rr.Code)
+	if rr.Code != http.StatusUnprocessableEntity {
+		t.Errorf("status = %d, want 422", rr.Code)
 	}
 	assertInertiaComponent(t, rr, "Contact")
 	assertInertiaErrors(t, rr, "email")
@@ -56,8 +56,8 @@ func TestContactHandler_Post_MissingName_InertiaErrors(t *testing.T) {
 	rr := httptest.NewRecorder()
 	h.Post(rr, req)
 
-	if rr.Code != http.StatusOK {
-		t.Errorf("status = %d, want 200", rr.Code)
+	if rr.Code != http.StatusUnprocessableEntity {
+		t.Errorf("status = %d, want 422", rr.Code)
 	}
 	assertInertiaErrors(t, rr, "name")
 }
@@ -70,8 +70,8 @@ func TestContactHandler_Post_InvalidEmail_InertiaErrors(t *testing.T) {
 	rr := httptest.NewRecorder()
 	h.Post(rr, req)
 
-	if rr.Code != http.StatusOK {
-		t.Errorf("status = %d, want 200", rr.Code)
+	if rr.Code != http.StatusUnprocessableEntity {
+		t.Errorf("status = %d, want 422", rr.Code)
 	}
 	assertInertiaErrors(t, rr, "email")
 }
@@ -84,14 +84,8 @@ func TestContactHandler_Get_InertiaFlash(t *testing.T) {
 	rr := httptest.NewRecorder()
 	h.Get(rr, req)
 
-	payload := parseInertiaJSON(t, rr)
-	props, ok := payload["props"].(map[string]any)
-	if !ok {
-		t.Fatalf("missing props: %v", payload)
-	}
-	flashProp, ok := props["flash"].(map[string]any)
-	if !ok || flashProp["success"] != "Message sent successfully." {
-		t.Errorf("props.flash missing success: %v", props)
+	if !strings.Contains(rr.Body.String(), "Message sent successfully.") {
+		t.Errorf("flash missing from HTML: %s", rr.Body.String())
 	}
 }
 

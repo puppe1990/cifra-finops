@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/puppe1990/cais/pkg/cais"
-	"github.com/puppe1990/cais/pkg/cais/flash"
-	"github.com/puppe1990/cais/pkg/cais/meta"
-	inertia "github.com/romsar/gonertia/v3"
+	"github.com/puppe1990/amarra-cais/pkg/amarra/view"
+	"github.com/puppe1990/amarra-cais/pkg/cais"
+	"github.com/puppe1990/amarra-cais/pkg/cais/flash"
+	"github.com/puppe1990/amarra-cais/pkg/cais/meta"
 
 	"github.com/puppe1990/aws-finops/internal/awsinv"
 	"github.com/puppe1990/aws-finops/internal/models"
@@ -17,16 +17,16 @@ import (
 )
 
 type CompareHandler struct {
-	store   store.Store
-	site    meta.Site
-	cfg     cais.Config
-	inertia *inertia.Inertia
-	syncer  *syncer.Syncer
-	now     func() time.Time
+	store  store.Store
+	site   meta.Site
+	cfg    cais.Config
+	views  *view.Renderer
+	syncer *syncer.Syncer
+	now    func() time.Time
 }
 
-func NewCompareHandler(s store.Store, site meta.Site, cfg cais.Config, i *inertia.Inertia) *CompareHandler {
-	return &CompareHandler{store: s, site: site, cfg: cfg, inertia: i}
+func NewCompareHandler(s store.Store, site meta.Site, cfg cais.Config, views *view.Renderer) *CompareHandler {
+	return &CompareHandler{store: s, site: site, cfg: cfg, views: views}
 }
 
 func (h *CompareHandler) WithSyncer(s *syncer.Syncer) *CompareHandler {
@@ -36,18 +36,18 @@ func (h *CompareHandler) WithSyncer(s *syncer.Syncer) *CompareHandler {
 
 func (h *CompareHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ws, err := loadWorkspace(h.store, r)
-	props := inertia.Props{
+	props := map[string]any{
 		"site":     meta.ForRequest(h.site, r),
 		"months":   []any{},
 		"services": []any{},
 		"ceDenied": false,
-		"flash":    inertia.Flash{},
+		"flash":    map[string]string{},
 	}
 	if msg, ok := flash.MessageFromRequest(r); ok {
-		props["flash"] = inertia.Flash{msg.Kind: msg.Message}
+		props["flash"] = map[string]string{msg.Kind: msg.Message}
 	}
 	if err != nil {
-		_ = h.inertia.Render(w, r, "Compare", props)
+		writePage(w, r, h.views, h.cfg, "app", "compare", props, 0)
 		return
 	}
 
@@ -79,8 +79,12 @@ func (h *CompareHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for k, v := range shellProps(h.site, r, h.store, ws) {
 		props[k] = v
 	}
-	props["months"] = compareMonthRows(buckets, cat, now)
+	months := compareMonthRows(buckets, cat, now)
+	props["months"] = months
+	if len(months) > 0 {
+		props["current"] = months[0]
+	}
 	props["services"] = compareServiceHistory(buckets)
 	props["ceDenied"] = ceDenied
-	_ = h.inertia.Render(w, r, "Compare", props)
+	writePage(w, r, h.views, h.cfg, "app", "compare", props, 0)
 }

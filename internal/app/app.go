@@ -8,13 +8,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/puppe1990/cais/pkg/cais"
-	"github.com/puppe1990/cais/pkg/cais/devlog"
-	"github.com/puppe1990/cais/pkg/cais/i18n"
-	"github.com/puppe1990/cais/pkg/cais/meta"
-	"github.com/puppe1990/cais/pkg/cais/middleware"
-	"github.com/puppe1990/cais/pkg/cais/netutil"
-	inertia "github.com/romsar/gonertia/v3"
+	"github.com/puppe1990/amarra-cais/pkg/amarra/view"
+	"github.com/puppe1990/amarra-cais/pkg/cais"
+	"github.com/puppe1990/amarra-cais/pkg/cais/devlog"
+	"github.com/puppe1990/amarra-cais/pkg/cais/i18n"
+	"github.com/puppe1990/amarra-cais/pkg/cais/meta"
+	"github.com/puppe1990/amarra-cais/pkg/cais/middleware"
+	"github.com/puppe1990/amarra-cais/pkg/cais/netutil"
 
 	"github.com/puppe1990/aws-finops/internal/crypto"
 	"github.com/puppe1990/aws-finops/internal/store"
@@ -24,12 +24,11 @@ import (
 const DevAppSecretDefault = "cifra-dev-only-change-me"
 
 type Deps struct {
-	Renderer  *cais.Renderer
+	Views     *view.Renderer
 	Store     store.Store
 	StaticDir string
 	Site      meta.Site
 	Catalog   *i18n.Catalog
-	Inertia   *inertia.Inertia
 	AppSecret []byte
 	Syncer    *syncer.Syncer
 }
@@ -53,26 +52,12 @@ type App struct {
 	server *http.Server
 }
 
-const defaultInertiaRoot = `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="UTF-8" />{{ .inertiaHead }}</head>
-<body>{{ .inertia }}</body>
-</html>`
-
 func New(cfg cais.Config, deps Deps) (*App, error) {
-	if deps.Renderer == nil {
-		return nil, fmt.Errorf("renderer is required")
+	if deps.Views == nil {
+		return nil, fmt.Errorf("views are required")
 	}
 	if deps.Store == nil {
 		return nil, fmt.Errorf("store is required")
-	}
-
-	if deps.Inertia == nil {
-		var err error
-		deps.Inertia, err = inertia.New(defaultInertiaRoot)
-		if err != nil {
-			return nil, fmt.Errorf("inertia: %w", err)
-		}
 	}
 
 	site := deps.Site
@@ -85,7 +70,7 @@ func New(cfg cais.Config, deps Deps) (*App, error) {
 	r := cais.NewRouter()
 	r.Use(middleware.CSRF(cfg))
 	r.Use(middleware.LoadSession(deps.Store.Sessions()))
-	r.Use(middleware.Flash)
+	r.Use(middleware.Flash(cfg))
 	buf := devlog.Prepare(cfg.Env)
 	if buf != nil {
 		r.Use(middleware.LoggerTo(cfg, devlog.MirrorDefault(log.Writer())))

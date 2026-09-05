@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/puppe1990/cais/pkg/cais"
-	"github.com/puppe1990/cais/pkg/cais/i18n"
-	"github.com/puppe1990/cais/pkg/cais/meta"
-	inertia "github.com/romsar/gonertia/v3"
+	"github.com/puppe1990/amarra-cais/pkg/amarra/view"
+	"github.com/puppe1990/amarra-cais/pkg/cais"
+	"github.com/puppe1990/amarra-cais/pkg/cais/i18n"
+	"github.com/puppe1990/amarra-cais/pkg/cais/meta"
 
 	"github.com/puppe1990/aws-finops/internal/finops"
 )
@@ -17,11 +17,11 @@ type HomeHandler struct {
 	site     meta.Site
 	catalog  *i18n.Catalog
 	cfg      cais.Config
-	inertia  *inertia.Inertia
+	views    *view.Renderer
 }
 
-func NewHomeHandler(renderer *cais.Renderer, site meta.Site, catalog *i18n.Catalog, cfg cais.Config, i *inertia.Inertia) *HomeHandler {
-	return &HomeHandler{renderer: renderer, site: site, catalog: catalog, cfg: cfg, inertia: i}
+func NewHomeHandler(_ *view.Renderer, site meta.Site, catalog *i18n.Catalog, cfg cais.Config, views *view.Renderer) *HomeHandler {
+	return &HomeHandler{site: site, catalog: catalog, cfg: cfg, views: views}
 }
 
 func (h *HomeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -46,7 +46,5 @@ func (h *HomeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		labels["eyebrow"] = cat.T("home.eyebrow_empty")
 	}
 	props["labels"] = labels
-	if err := h.inertia.Render(w, r, "Home", props); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	writePage(w, r, h.views, h.cfg, "public", "home", props, 0)
 }

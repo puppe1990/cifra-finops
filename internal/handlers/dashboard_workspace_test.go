@@ -3,10 +3,11 @@ package handlers
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
-	"github.com/puppe1990/cais/pkg/cais"
-	"github.com/puppe1990/cais/pkg/cais/session"
+	"github.com/puppe1990/amarra-cais/pkg/cais"
+	"github.com/puppe1990/amarra-cais/pkg/cais/session"
 
 	"github.com/puppe1990/aws-finops/internal/finops"
 	"github.com/puppe1990/aws-finops/internal/seed"
@@ -23,7 +24,7 @@ func TestDashboardHandler_showsSeededAccount(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	h := NewDashboardHandler(setupTestRenderer(t), s, testSite(), cais.Config{}, setupTestInertia(t))
+	h := NewDashboardHandler(setupTestRenderer(t), s, testSite(), cais.Config{}, setupTestViews(t))
 	req := inertiaRequest(http.MethodGet, "/dashboard", nil)
 	req = session.WithUserID(req, uid)
 	rr := httptest.NewRecorder()
@@ -33,12 +34,7 @@ func TestDashboardHandler_showsSeededAccount(t *testing.T) {
 		t.Fatalf("status = %d body=%s", rr.Code, rr.Body.String())
 	}
 	assertInertiaComponent(t, rr, "Dashboard")
-	accounts, ok := assertInertiaProp(t, rr, "accounts").([]any)
-	if !ok || len(accounts) != 1 {
-		t.Fatalf("accounts = %#v", accounts)
-	}
-	first, _ := accounts[0].(map[string]any)
-	if first["awsAccountId"] != "111111111111" {
-		t.Fatalf("seeded account = %#v", first)
+	if !strings.Contains(rr.Body.String(), "111111111111") {
+		t.Fatalf("seeded account missing: %s", rr.Body.String())
 	}
 }

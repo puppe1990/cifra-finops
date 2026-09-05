@@ -7,11 +7,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/puppe1990/cais/pkg/cais"
-	"github.com/puppe1990/cais/pkg/cais/flash"
-	"github.com/puppe1990/cais/pkg/cais/i18n"
-	"github.com/puppe1990/cais/pkg/cais/meta"
-	inertia "github.com/romsar/gonertia/v3"
+	"github.com/puppe1990/amarra-cais/pkg/amarra/view"
+	"github.com/puppe1990/amarra-cais/pkg/cais"
+	"github.com/puppe1990/amarra-cais/pkg/cais/flash"
+	"github.com/puppe1990/amarra-cais/pkg/cais/i18n"
+	"github.com/puppe1990/amarra-cais/pkg/cais/meta"
 
 	"github.com/puppe1990/aws-finops/internal/awsinv"
 	"github.com/puppe1990/aws-finops/internal/costest"
@@ -26,13 +26,13 @@ type DashboardHandler struct {
 	store    store.Store
 	site     meta.Site
 	cfg      cais.Config
-	inertia  *inertia.Inertia
+	views    *view.Renderer
 	syncer   *syncer.Syncer
 	now      func() time.Time
 }
 
-func NewDashboardHandler(renderer *cais.Renderer, s store.Store, site meta.Site, cfg cais.Config, i *inertia.Inertia) *DashboardHandler {
-	return &DashboardHandler{renderer: renderer, store: s, site: site, cfg: cfg, inertia: i}
+func NewDashboardHandler(_ *view.Renderer, s store.Store, site meta.Site, cfg cais.Config, views *view.Renderer) *DashboardHandler {
+	return &DashboardHandler{store: s, site: site, cfg: cfg, views: views}
 }
 
 func (h *DashboardHandler) WithSyncer(s *syncer.Syncer) *DashboardHandler {
@@ -42,7 +42,7 @@ func (h *DashboardHandler) WithSyncer(s *syncer.Syncer) *DashboardHandler {
 
 func (h *DashboardHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ws, err := loadWorkspace(h.store, r)
-	props := inertia.Props{
+	props := map[string]any{
 		"site":          meta.ForRequest(h.site, r),
 		"totalContacts": int64(0),
 		"env":           h.cfg.Env,
@@ -53,13 +53,13 @@ func (h *DashboardHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		"budgets":       []any{},
 		"accounts":      []any{},
 		"lastSync":      nil,
-		"flash":         inertia.Flash{},
+		"flash":         map[string]string{},
 	}
 	if msg, ok := flash.MessageFromRequest(r); ok {
-		props["flash"] = inertia.Flash{msg.Kind: msg.Message}
+		props["flash"] = map[string]string{msg.Kind: msg.Message}
 	}
 	if err != nil {
-		_ = h.inertia.Render(w, r, "Dashboard", props)
+		writePage(w, r, h.views, h.cfg, "app", "dashboard", props, 0)
 		return
 	}
 
@@ -106,7 +106,7 @@ func (h *DashboardHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		attachForecast(r.Context(), h.syncer, ws.Tenant.ID, now, cat, view.Summary)
 	}
 	props["summary"] = view.Summary
-	props["services"] = view.Services
+	props["services"] = withSpendPct(view.Services)
 	props["resources"] = view.Resources
 	props["findings"] = view.Findings
 	props["budgets"] = view.Budgets
@@ -117,7 +117,7 @@ func (h *DashboardHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	props["prevMonth"] = lm.Prev
 	props["nextMonth"] = lm.Next
 	props["isCurrent"] = lm.IsCurrent
-	_ = h.inertia.Render(w, r, "Dashboard", props)
+	writePage(w, r, h.views, h.cfg, "app", "dashboard", props, 0)
 }
 
 type tenantView struct {
@@ -319,6 +319,30 @@ func accountProps(accounts []models.CloudAccount) []map[string]any {
 			"authMode":     a.AuthMode,
 			"primary":      a.IsPrimary,
 		})
+	}
+	return out
+}
+
+func withSpendPct(services []map[string]any) []map[string]any {
+	var max int64
+	out := make([]map[string]any, 0, len(services))
+	for _, s := range services {
+		cents, _ := s["cents"].(int64)
+		if cents <= 0 {
+			continue
+		}
+		if cents > max {
+			max = cents
+		}
+		out = append(out, s)
+	}
+	for _, s := range out {
+		cents, _ := s["cents"].(int64)
+		if max == 0 {
+			s["pct"] = 0
+			continue
+		}
+		s["pct"] = int(cents * 100 / max)
 	}
 	return out
 }

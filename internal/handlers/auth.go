@@ -5,15 +5,15 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/puppe1990/cais/pkg/cais"
-	"github.com/puppe1990/cais/pkg/cais/flash"
-	"github.com/puppe1990/cais/pkg/cais/httpx"
-	"github.com/puppe1990/cais/pkg/cais/i18n"
-	"github.com/puppe1990/cais/pkg/cais/meta"
-	"github.com/puppe1990/cais/pkg/cais/passwordreset"
-	"github.com/puppe1990/cais/pkg/cais/session"
-	"github.com/puppe1990/cais/pkg/cais/validate"
-	inertia "github.com/romsar/gonertia/v3"
+	"github.com/puppe1990/amarra-cais/pkg/amarra/view"
+	"github.com/puppe1990/amarra-cais/pkg/cais"
+	"github.com/puppe1990/amarra-cais/pkg/cais/flash"
+	"github.com/puppe1990/amarra-cais/pkg/cais/httpx"
+	"github.com/puppe1990/amarra-cais/pkg/cais/i18n"
+	"github.com/puppe1990/amarra-cais/pkg/cais/meta"
+	"github.com/puppe1990/amarra-cais/pkg/cais/passwordreset"
+	"github.com/puppe1990/amarra-cais/pkg/cais/session"
+	"github.com/puppe1990/amarra-cais/pkg/cais/validate"
 
 	"github.com/puppe1990/aws-finops/internal/store"
 )
@@ -26,19 +26,19 @@ type AuthHandler struct {
 	cfg         cais.Config
 	catalog     *i18n.Catalog
 	resetNotify passwordreset.Notifier
-	inertia     *inertia.Inertia
+	views       *view.Renderer
 }
 
-func NewAuthHandler(renderer *cais.Renderer, s store.Store, site meta.Site, sessions session.Store, cfg cais.Config, catalog *i18n.Catalog, i *inertia.Inertia) *AuthHandler {
-	return &AuthHandler{renderer: renderer, store: s, site: site, sessions: sessions, cfg: cfg, catalog: catalog, inertia: i}
+func NewAuthHandler(_ *view.Renderer, s store.Store, site meta.Site, sessions session.Store, cfg cais.Config, catalog *i18n.Catalog, views *view.Renderer) *AuthHandler {
+	return &AuthHandler{store: s, site: site, sessions: sessions, cfg: cfg, catalog: catalog, views: views}
 }
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if _, ok := session.UserID(r); ok {
-		h.inertia.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+		http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 		return
 	}
-	_ = h.inertia.Render(w, r, "Login", publicProps(h.site, r, h.cfg.Locale))
+	writePage(w, r, h.views, h.cfg, "auth", "login", publicProps(h.site, r, h.cfg.Locale))
 }
 
 func (h *AuthHandler) LoginPost(w http.ResponseWriter, r *http.Request) {
@@ -52,10 +52,9 @@ func (h *AuthHandler) LoginPost(w http.ResponseWriter, r *http.Request) {
 	cat := requestCatalog(r, h.cfg.Locale)
 	user, err := h.store.FindUserByEmail(email)
 	if err != nil || !session.VerifyPassword(user.PasswordHash, password) {
-		ctx := inertia.SetValidationErrors(r.Context(), inertia.ValidationErrors{
-			"email": cat.T("auth.invalid_credentials"),
-		})
-		_ = h.inertia.Render(w, r.WithContext(ctx), "Login", publicProps(h.site, r, h.cfg.Locale))
+		props := publicProps(h.site, r, h.cfg.Locale)
+		props["Errors"] = map[string]string{"email": cat.T("auth.invalid_credentials")}
+		writePage(w, r, h.views, h.cfg, "auth", "login", props, 422)
 		return
 	}
 
@@ -65,20 +64,20 @@ func (h *AuthHandler) LoginPost(w http.ResponseWriter, r *http.Request) {
 	}
 	// cais flash cookie (gonertia SetFlash needs FlashDataProvider; scaffold uses cookies — #140).
 	flash.Set(w, "notice", requestCatalog(r, h.cfg.Locale).T("auth.welcome"), h.cfg.CookieSecure())
-	h.inertia.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 }
 
 func (h *AuthHandler) LogoutPost(w http.ResponseWriter, r *http.Request) {
 	session.SignOut(w, h.sessions, r, session.CookieOptionsFromConfig(h.cfg))
-	h.inertia.Redirect(w, r, "/login", http.StatusSeeOther)
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
 func (h *AuthHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	if _, ok := session.UserID(r); ok {
-		h.inertia.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+		http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 		return
 	}
-	_ = h.inertia.Render(w, r, "Signup", publicProps(h.site, r, h.cfg.Locale))
+	writePage(w, r, h.views, h.cfg, "auth", "signup", publicProps(h.site, r, h.cfg.Locale))
 }
 
 func (h *AuthHandler) SignUpPost(w http.ResponseWriter, r *http.Request) {
@@ -102,12 +101,13 @@ func (h *AuthHandler) SignUpPost(w http.ResponseWriter, r *http.Request) {
 		errs.Add("password_confirmation", requestCatalog(r, h.cfg.Locale).T("auth.password_mismatch"))
 	}
 	if errs.Any() {
-		ve := make(inertia.ValidationErrors)
+		ve := map[string]string{}
 		for k, v := range errs {
 			ve[k] = v
 		}
-		ctx := inertia.SetValidationErrors(r.Context(), ve)
-		_ = h.inertia.Render(w, r.WithContext(ctx), "Signup", publicProps(h.site, r, h.cfg.Locale))
+		props := publicProps(h.site, r, h.cfg.Locale)
+		props["Errors"] = ve
+		writePage(w, r, h.views, h.cfg, "auth", "signup", props, 422)
 		return
 	}
 
@@ -119,10 +119,9 @@ func (h *AuthHandler) SignUpPost(w http.ResponseWriter, r *http.Request) {
 	userID, err := h.store.CreateUser(email, hash)
 	if err != nil {
 		if errors.Is(err, store.ErrEmailTaken) {
-			ctx := inertia.SetValidationErrors(r.Context(), inertia.ValidationErrors{
-				"email": requestCatalog(r, h.cfg.Locale).T("auth.email_taken"),
-			})
-			_ = h.inertia.Render(w, r.WithContext(ctx), "Signup", publicProps(h.site, r, h.cfg.Locale))
+			props := publicProps(h.site, r, h.cfg.Locale)
+			props["Errors"] = map[string]string{"email": requestCatalog(r, h.cfg.Locale).T("auth.email_taken")}
+			writePage(w, r, h.views, h.cfg, "auth", "signup", props, 422)
 			return
 		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -139,15 +138,15 @@ func (h *AuthHandler) SignUpPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	flash.Set(w, "notice", requestCatalog(r, h.cfg.Locale).T("auth.welcome"), h.cfg.CookieSecure())
-	h.inertia.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 }
 
 func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	if _, ok := session.UserID(r); ok {
-		h.inertia.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+		http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 		return
 	}
-	_ = h.inertia.Render(w, r, "ForgotPassword", publicProps(h.site, r, h.cfg.Locale))
+	writePage(w, r, h.views, h.cfg, "auth", "forgot_password", publicProps(h.site, r, h.cfg.Locale))
 }
 
 func (h *AuthHandler) ForgotPasswordPost(w http.ResponseWriter, r *http.Request) {
@@ -162,12 +161,13 @@ func (h *AuthHandler) ForgotPasswordPost(w http.ResponseWriter, r *http.Request)
 		errs.Add("email", requestCatalog(r, h.cfg.Locale).T("contact.email_invalid"))
 	}
 	if errs.Any() {
-		ve := make(inertia.ValidationErrors)
+		ve := map[string]string{}
 		for k, v := range errs {
 			ve[k] = v
 		}
-		ctx := inertia.SetValidationErrors(r.Context(), ve)
-		_ = h.inertia.Render(w, r.WithContext(ctx), "ForgotPassword", publicProps(h.site, r, h.cfg.Locale))
+		props := publicProps(h.site, r, h.cfg.Locale)
+		props["Errors"] = ve
+		writePage(w, r, h.views, h.cfg, "auth", "forgot_password", props, 422)
 		return
 	}
 
@@ -181,12 +181,12 @@ func (h *AuthHandler) ForgotPasswordPost(w http.ResponseWriter, r *http.Request)
 	}
 
 	flash.Set(w, "notice", requestCatalog(r, h.cfg.Locale).T("auth.reset_email_sent"), h.cfg.CookieSecure())
-	h.inertia.Redirect(w, r, "/login", http.StatusSeeOther)
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
 func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	if _, ok := session.UserID(r); ok {
-		h.inertia.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+		http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 		return
 	}
 
@@ -194,20 +194,14 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	props := publicProps(h.site, r, h.cfg.Locale)
 	props["token"] = token
 	if token == "" {
-		ctx := inertia.SetValidationErrors(r.Context(), inertia.ValidationErrors{
-			"token": requestCatalog(r, h.cfg.Locale).T("auth.reset_invalid_token"),
-		})
-		_ = h.inertia.Render(w, r.WithContext(ctx), "ResetPassword", props)
+		writePage(w, r, h.views, h.cfg, "auth", "reset_password", props, 422)
 		return
 	}
 	if _, ok := h.store.FindPasswordResetUserID(token); !ok {
-		ctx := inertia.SetValidationErrors(r.Context(), inertia.ValidationErrors{
-			"token": requestCatalog(r, h.cfg.Locale).T("auth.reset_invalid_token"),
-		})
-		_ = h.inertia.Render(w, r.WithContext(ctx), "ResetPassword", props)
+		writePage(w, r, h.views, h.cfg, "auth", "reset_password", props, 422)
 		return
 	}
-	_ = h.inertia.Render(w, r, "ResetPassword", props)
+	writePage(w, r, h.views, h.cfg, "auth", "reset_password", props, 0)
 }
 
 func (h *AuthHandler) ResetPasswordPost(w http.ResponseWriter, r *http.Request) {
@@ -224,13 +218,10 @@ func (h *AuthHandler) ResetPasswordPost(w http.ResponseWriter, r *http.Request) 
 	if token == "" {
 		errs.Add("token", requestCatalog(r, h.cfg.Locale).T("auth.reset_invalid_token"))
 	} else if _, ok := h.store.FindPasswordResetUserID(token); !ok {
-		ctx := inertia.SetValidationErrors(r.Context(), inertia.ValidationErrors{
-			"token": requestCatalog(r, h.cfg.Locale).T("auth.reset_invalid_token"),
-		})
-		_ = h.inertia.Render(w, r.WithContext(ctx), "ResetPassword", inertia.Props{
-			"site":  meta.ForRequest(h.site, r),
-			"token": token,
-		})
+		props := publicProps(h.site, r, h.cfg.Locale)
+		props["token"] = token
+		props["Errors"] = map[string]string{"token": requestCatalog(r, h.cfg.Locale).T("auth.reset_invalid_token")}
+		writePage(w, r, h.views, h.cfg, "auth", "reset_password", props, 422)
 		return
 	}
 	if err := validate.MinLength(password, 8); err != nil {
@@ -240,12 +231,11 @@ func (h *AuthHandler) ResetPasswordPost(w http.ResponseWriter, r *http.Request) 
 		errs.Add("password_confirmation", requestCatalog(r, h.cfg.Locale).T("auth.password_mismatch"))
 	}
 	if errs.Any() {
-		ve := make(inertia.ValidationErrors)
+		ve := map[string]string{}
 		for k, v := range errs {
 			ve[k] = v
 		}
-		ctx := inertia.SetValidationErrors(r.Context(), ve)
-		_ = h.inertia.Render(w, r.WithContext(ctx), "ResetPassword", inertia.Props{"token": token})
+		writePage(w, r, h.views, h.cfg, "auth", "reset_password", map[string]any{"token": token}, 422)
 		return
 	}
 
@@ -255,10 +245,7 @@ func (h *AuthHandler) ResetPasswordPost(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	if err := h.store.ResetPasswordWithToken(token, hash); err != nil {
-		ctx := inertia.SetValidationErrors(r.Context(), inertia.ValidationErrors{
-			"token": requestCatalog(r, h.cfg.Locale).T("auth.reset_invalid_token"),
-		})
-		_ = h.inertia.Render(w, r.WithContext(ctx), "ResetPassword", inertia.Props{
+		writePage(w, r, h.views, h.cfg, "auth", "reset_password", map[string]any{
 			"site":  meta.ForRequest(h.site, r),
 			"token": token,
 		})
@@ -266,7 +253,7 @@ func (h *AuthHandler) ResetPasswordPost(w http.ResponseWriter, r *http.Request) 
 	}
 
 	flash.Set(w, "notice", requestCatalog(r, h.cfg.Locale).T("auth.reset_success"), h.cfg.CookieSecure())
-	h.inertia.Redirect(w, r, "/login", http.StatusSeeOther)
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
 func (h *AuthHandler) resetNotifier() passwordreset.Notifier {

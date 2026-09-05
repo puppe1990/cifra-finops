@@ -6,12 +6,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/puppe1990/cais/pkg/cais"
-	"github.com/puppe1990/cais/pkg/cais/flash"
-	"github.com/puppe1990/cais/pkg/cais/httpx"
-	"github.com/puppe1990/cais/pkg/cais/meta"
-	"github.com/puppe1990/cais/pkg/cais/validate"
-	inertia "github.com/romsar/gonertia/v3"
+	"github.com/puppe1990/amarra-cais/pkg/amarra/view"
+	"github.com/puppe1990/amarra-cais/pkg/cais"
+	"github.com/puppe1990/amarra-cais/pkg/cais/flash"
+	"github.com/puppe1990/amarra-cais/pkg/cais/httpx"
+	"github.com/puppe1990/amarra-cais/pkg/cais/meta"
+	"github.com/puppe1990/amarra-cais/pkg/cais/validate"
 
 	"github.com/puppe1990/aws-finops/internal/awsinv"
 	"github.com/puppe1990/aws-finops/internal/crypto"
@@ -25,13 +25,13 @@ type AccountsHandler struct {
 	store     store.Store
 	site      meta.Site
 	cfg       cais.Config
-	inertia   *inertia.Inertia
+	views     *view.Renderer
 	syncer    *syncer.Syncer
 	appSecret []byte
 }
 
-func NewAccountsHandler(s store.Store, site meta.Site, cfg cais.Config, i *inertia.Inertia, appSecret []byte) *AccountsHandler {
-	return &AccountsHandler{store: s, site: site, cfg: cfg, inertia: i, appSecret: appSecret}
+func NewAccountsHandler(s store.Store, site meta.Site, cfg cais.Config, views *view.Renderer, appSecret []byte) *AccountsHandler {
+	return &AccountsHandler{store: s, site: site, cfg: cfg, views: views, appSecret: appSecret}
 }
 
 func (h *AccountsHandler) WithSyncer(s *syncer.Syncer) *AccountsHandler {
@@ -42,7 +42,7 @@ func (h *AccountsHandler) WithSyncer(s *syncer.Syncer) *AccountsHandler {
 func (h *AccountsHandler) List(w http.ResponseWriter, r *http.Request) {
 	ws, err := loadWorkspace(h.store, r)
 	if err != nil {
-		h.inertia.Redirect(w, r, "/login", http.StatusSeeOther)
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 	accounts, err := h.store.ListCloudAccounts(ws.Tenant.ID)
@@ -53,13 +53,13 @@ func (h *AccountsHandler) List(w http.ResponseWriter, r *http.Request) {
 	props := shellProps(h.site, r, h.store, ws)
 	props["accounts"] = accountProps(accounts)
 	props["policy"] = awsinv.FinOpsIAMPolicy
-	_ = h.inertia.Render(w, r, "Accounts", props)
+	writePage(w, r, h.views, h.cfg, "app", "accounts", props, 0)
 }
 
 func (h *AccountsHandler) Create(w http.ResponseWriter, r *http.Request) {
 	ws, err := loadWorkspace(h.store, r)
 	if err != nil {
-		h.inertia.Redirect(w, r, "/login", http.StatusSeeOther)
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 	if err := httpx.ParseFormOrJSON(r); err != nil {
@@ -87,16 +87,15 @@ func (h *AccountsHandler) Create(w http.ResponseWriter, r *http.Request) {
 		errs.Add("access_key_id", requestCatalog(r, h.cfg.Locale).T("acc.err_key"))
 	}
 	if errs.Any() {
-		ve := make(inertia.ValidationErrors)
+		ve := map[string]string{}
 		for k, v := range errs {
 			ve[k] = v
 		}
-		ctx := inertia.SetValidationErrors(r.Context(), ve)
 		accounts, _ := h.store.ListCloudAccounts(ws.Tenant.ID)
 		props := shellProps(h.site, r, h.store, ws)
 		props["accounts"] = accountProps(accounts)
 		props["policy"] = awsinv.FinOpsIAMPolicy
-		_ = h.inertia.Render(w, r.WithContext(ctx), "Accounts", props)
+		writePage(w, r, h.views, h.cfg, "app", "accounts", props, 422)
 		return
 	}
 	acc := models.CloudAccount{
@@ -129,18 +128,18 @@ func (h *AccountsHandler) Create(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	flash.Set(w, "notice", requestCatalog(r, h.cfg.Locale).T("acc.linked"), h.cfg.CookieSecure())
-	h.inertia.Redirect(w, r, "/accounts", http.StatusSeeOther)
+	http.Redirect(w, r, "/accounts", http.StatusSeeOther)
 }
 
 func (h *AccountsHandler) Sync(w http.ResponseWriter, r *http.Request) {
 	ws, err := loadWorkspace(h.store, r)
 	if err != nil {
-		h.inertia.Redirect(w, r, "/login", http.StatusSeeOther)
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 	if h.syncer == nil {
 		flash.Set(w, "alert", requestCatalog(r, h.cfg.Locale).T("acc.sync_none"), h.cfg.CookieSecure())
-		h.inertia.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+		http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 		return
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 40*time.Second)
@@ -150,5 +149,5 @@ func (h *AccountsHandler) Sync(w http.ResponseWriter, r *http.Request) {
 	} else {
 		flash.Set(w, "notice", requestCatalog(r, h.cfg.Locale).T("acc.sync_ok"), h.cfg.CookieSecure())
 	}
-	h.inertia.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 }

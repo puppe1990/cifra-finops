@@ -1,6 +1,6 @@
 .PHONY: dev build test css css-watch lint format format-check pre-commit-install ci
 
-CAIS := $(shell command -v cais 2>/dev/null || command -v $(HOME)/go/bin/cais 2>/dev/null)
+CAIS := $(shell command -v amarra-cais 2>/dev/null || command -v $(HOME)/go/bin/amarra-cais 2>/dev/null || command -v cais 2>/dev/null)
 
 BIN := bin/server
 CSS_IN := input.css
@@ -29,13 +29,9 @@ css:
 css-watch:
 	npx tailwindcss -i $(CSS_IN) -o $(CSS_OUT) --watch
 
-build: css fe
+build: css
 	CGO_ENABLED=0 go build -ldflags="-s -w" -o $(BIN) ./cmd/server
-
-fe:
-	npm run build
 
 dev: css
 	$(MAKE) css-watch &
-	npm run dev:fe &
 	$(CAIS) dev

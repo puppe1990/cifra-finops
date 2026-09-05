@@ -7,13 +7,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/puppe1990/cais/pkg/cais"
+	"github.com/puppe1990/amarra-cais/pkg/cais"
 
 	"github.com/puppe1990/aws-finops/internal/locale"
 )
 
 func TestLocaleHandler_Post_setsCookieAndRedirects(t *testing.T) {
-	h := NewLocaleHandler(cais.Config{}, setupTestInertia(t))
+	h := NewLocaleHandler(cais.Config{}, setupTestViews(t))
 	form := url.Values{"locale": {"pt-BR"}}
 	req := httptest.NewRequest(http.MethodPost, "/locale", strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")

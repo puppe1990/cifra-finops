@@ -6,41 +6,41 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/puppe1990/cais/pkg/cais"
-	"github.com/puppe1990/cais/pkg/cais/flash"
-	"github.com/puppe1990/cais/pkg/cais/httpx"
-	"github.com/puppe1990/cais/pkg/cais/meta"
-	inertia "github.com/romsar/gonertia/v3"
+	"github.com/puppe1990/amarra-cais/pkg/amarra/view"
+	"github.com/puppe1990/amarra-cais/pkg/cais"
+	"github.com/puppe1990/amarra-cais/pkg/cais/flash"
+	"github.com/puppe1990/amarra-cais/pkg/cais/httpx"
+	"github.com/puppe1990/amarra-cais/pkg/cais/meta"
 
 	"github.com/puppe1990/aws-finops/internal/finops"
 	"github.com/puppe1990/aws-finops/internal/store"
 )
 
 type TenantsHandler struct {
-	store   store.Store
-	site    meta.Site
-	cfg     cais.Config
-	inertia *inertia.Inertia
+	store store.Store
+	site  meta.Site
+	cfg   cais.Config
+	views *view.Renderer
 }
 
-func NewTenantsHandler(s store.Store, site meta.Site, cfg cais.Config, i *inertia.Inertia) *TenantsHandler {
-	return &TenantsHandler{store: s, site: site, cfg: cfg, inertia: i}
+func NewTenantsHandler(s store.Store, site meta.Site, cfg cais.Config, views *view.Renderer) *TenantsHandler {
+	return &TenantsHandler{store: s, site: site, cfg: cfg, views: views}
 }
 
 func (h *TenantsHandler) List(w http.ResponseWriter, r *http.Request) {
 	ws, err := loadWorkspace(h.store, r)
 	if err != nil {
-		h.inertia.Redirect(w, r, "/login", http.StatusSeeOther)
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 	props := shellProps(h.site, r, h.store, ws)
-	_ = h.inertia.Render(w, r, "Tenants", props)
+	writePage(w, r, h.views, h.cfg, "app", "tenants", props, 0)
 }
 
 func (h *TenantsHandler) Create(w http.ResponseWriter, r *http.Request) {
 	ws, err := loadWorkspace(h.store, r)
 	if err != nil {
-		h.inertia.Redirect(w, r, "/login", http.StatusSeeOther)
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 	if err := httpx.ParseFormOrJSON(r); err != nil {
@@ -51,13 +51,13 @@ func (h *TenantsHandler) Create(w http.ResponseWriter, r *http.Request) {
 	slug := slugify(r.FormValue("slug"), name)
 	if name == "" || slug == "" {
 		flash.Set(w, "alert", requestCatalog(r, h.cfg.Locale).T("ten.need_name"), h.cfg.CookieSecure())
-		h.inertia.Redirect(w, r, "/tenants", http.StatusSeeOther)
+		http.Redirect(w, r, "/tenants", http.StatusSeeOther)
 		return
 	}
 	id, err := h.store.CreateTenant(name, slug)
 	if err != nil {
 		flash.Set(w, "alert", requestCatalog(r, h.cfg.Locale).T("ten.slug_taken"), h.cfg.CookieSecure())
-		h.inertia.Redirect(w, r, "/tenants", http.StatusSeeOther)
+		http.Redirect(w, r, "/tenants", http.StatusSeeOther)
 		return
 	}
 	if err := h.store.AddMember(id, ws.User.ID, finops.RoleOwner); err != nil {
@@ -66,13 +66,13 @@ func (h *TenantsHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 	_ = h.store.SetActiveTenant(ws.User.ID, id)
 	flash.Set(w, "notice", requestCatalog(r, h.cfg.Locale).T("ten.created"), h.cfg.CookieSecure())
-	h.inertia.Redirect(w, r, "/accounts", http.StatusSeeOther)
+	http.Redirect(w, r, "/accounts", http.StatusSeeOther)
 }
 
 func (h *TenantsHandler) Switch(w http.ResponseWriter, r *http.Request) {
 	ws, err := loadWorkspace(h.store, r)
 	if err != nil {
-		h.inertia.Redirect(w, r, "/login", http.StatusSeeOther)
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 	if err := httpx.ParseFormOrJSON(r); err != nil {
@@ -82,7 +82,7 @@ func (h *TenantsHandler) Switch(w http.ResponseWriter, r *http.Request) {
 	id, _ := strconv.ParseInt(r.FormValue("tenant_id"), 10, 64)
 	if _, ok, err := h.store.MembershipRole(id, ws.User.ID); err != nil || !ok {
 		flash.Set(w, "alert", requestCatalog(r, h.cfg.Locale).T("ten.not_member"), h.cfg.CookieSecure())
-		h.inertia.Redirect(w, r, "/tenants", http.StatusSeeOther)
+		http.Redirect(w, r, "/tenants", http.StatusSeeOther)
 		return
 	}
 	if err := h.store.SetActiveTenant(ws.User.ID, id); err != nil {
@@ -90,7 +90,7 @@ func (h *TenantsHandler) Switch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	flash.Set(w, "notice", requestCatalog(r, h.cfg.Locale).T("ten.switched"), h.cfg.CookieSecure())
-	h.inertia.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 }
 
 func slugify(raw, fallback string) string {
