@@ -9,11 +9,11 @@ import (
 	"github.com/puppe1990/amarra-cais/pkg/amarra/view"
 	"github.com/puppe1990/amarra-cais/pkg/cais/meta"
 
-	"github.com/puppe1990/aws-finops/internal/store"
+	"github.com/puppe1990/cifra-finops/internal/store"
 )
 
 func testSite() meta.Site {
-	return meta.Site{AppName: "aws-finops", AppURL: "https://cais.example.com"}
+	return meta.Site{AppName: "Cifra", AppURL: "https://cais.example.com"}
 }
 
 func projectRoot(t *testing.T) string {

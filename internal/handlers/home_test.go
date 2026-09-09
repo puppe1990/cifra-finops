@@ -15,6 +15,22 @@ func newHomeHandler(t *testing.T) *HomeHandler {
 	return NewHomeHandler(setupTestRenderer(t), testSite(), i18n.DefaultCatalog(), cais.Config{}, setupTestViews(t))
 }
 
+func TestHomeHandler_usesMultiCloudLedgerHeading(t *testing.T) {
+	h := newHomeHandler(t)
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	rr := httptest.NewRecorder()
+	h.ServeHTTP(rr, req)
+
+	body := rr.Body.String()
+	if !strings.Contains(body, "The multi cloud finops ledger.") {
+		t.Errorf("missing multi cloud heading: %s", body)
+	}
+	if strings.Contains(body, "The AWS ledger") {
+		t.Error("old AWS ledger copy still on home")
+	}
+}
+
 func TestHomeHandler_Returns200(t *testing.T) {
 	h := newHomeHandler(t)
 

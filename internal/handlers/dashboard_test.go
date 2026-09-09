@@ -11,10 +11,10 @@ import (
 	"github.com/puppe1990/amarra-cais/pkg/cais/flash"
 	"github.com/puppe1990/amarra-cais/pkg/cais/session"
 
-	"github.com/puppe1990/aws-finops/internal/finops"
-	"github.com/puppe1990/aws-finops/internal/models"
-	"github.com/puppe1990/aws-finops/internal/seed"
-	"github.com/puppe1990/aws-finops/internal/syncer"
+	"github.com/puppe1990/cifra-finops/internal/finops"
+	"github.com/puppe1990/cifra-finops/internal/models"
+	"github.com/puppe1990/cifra-finops/internal/seed"
+	"github.com/puppe1990/cifra-finops/internal/syncer"
 )
 
 func TestDashboardHandler_InertiaComponent(t *testing.T) {

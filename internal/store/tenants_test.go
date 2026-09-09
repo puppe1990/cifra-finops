@@ -3,8 +3,8 @@ package store
 import (
 	"testing"
 
-	"github.com/puppe1990/aws-finops/internal/finops"
-	"github.com/puppe1990/aws-finops/internal/models"
+	"github.com/puppe1990/cifra-finops/internal/finops"
+	"github.com/puppe1990/cifra-finops/internal/models"
 )
 
 func TestStore_ListResources_isolatedByTenant(t *testing.T) {

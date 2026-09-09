@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/puppe1990/aws-finops/internal/awsinv"
-	appi18n "github.com/puppe1990/aws-finops/internal/i18n"
-	"github.com/puppe1990/aws-finops/internal/models"
+	"github.com/puppe1990/cifra-finops/internal/awsinv"
+	appi18n "github.com/puppe1990/cifra-finops/internal/i18n"
+	"github.com/puppe1990/cifra-finops/internal/models"
 )
 
 func TestMonthDeltaBps(t *testing.T) {

@@ -44,7 +44,7 @@ var ptMessages = map[string]string{
 	"home.tagline":         "Mini app Go com HTMX, Tailwind e SQLite.",
 	"home.contact_link":    "Contato",
 	"home.default_name":    "Desenvolvedor",
-	"home.rails_heading":   "O livro-caixa da AWS.",
+	"home.rails_heading":   "O livro-caixa FinOps multi-cloud.",
 	"home.rails_subtitle":  "%s lê inventário, estima burn e isola cada cliente num workspace.",
 	"home.stack":           "Cais · Go · Inertia · Svelte · SQLite",
 	"home.next_steps":      "Próximos passos",
@@ -76,7 +76,7 @@ var ptMessages = map[string]string{
 	"lang.pt":     "PT",
 	"workspace":   "Workspace",
 
-	"auth.tagline":    "O livro-caixa da AWS",
+	"auth.tagline":    "O livro-caixa FinOps multi-cloud",
 	"auth.login_book": "Entrar no livro",
 
 	"home.open_ledger":    "Abrir o livro",

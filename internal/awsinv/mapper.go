@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/puppe1990/aws-finops/internal/costest"
-	"github.com/puppe1990/aws-finops/internal/finops"
-	"github.com/puppe1990/aws-finops/internal/models"
+	"github.com/puppe1990/cifra-finops/internal/costest"
+	"github.com/puppe1990/cifra-finops/internal/finops"
+	"github.com/puppe1990/cifra-finops/internal/models"
 )
 
 type resourceInput struct {

@@ -9,7 +9,7 @@ import (
 
 	"github.com/puppe1990/amarra-cais/pkg/cais"
 
-	"github.com/puppe1990/aws-finops/internal/locale"
+	"github.com/puppe1990/cifra-finops/internal/locale"
 )
 
 func TestLocaleHandler_Post_setsCookieAndRedirects(t *testing.T) {

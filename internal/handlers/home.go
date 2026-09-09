@@ -9,7 +9,7 @@ import (
 	"github.com/puppe1990/amarra-cais/pkg/cais/i18n"
 	"github.com/puppe1990/amarra-cais/pkg/cais/meta"
 
-	"github.com/puppe1990/aws-finops/internal/finops"
+	"github.com/puppe1990/cifra-finops/internal/finops"
 )
 
 type HomeHandler struct {

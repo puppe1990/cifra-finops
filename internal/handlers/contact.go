@@ -11,8 +11,8 @@ import (
 	"github.com/puppe1990/amarra-cais/pkg/cais/meta"
 	"github.com/puppe1990/amarra-cais/pkg/cais/validate"
 
-	"github.com/puppe1990/aws-finops/internal/models"
-	"github.com/puppe1990/aws-finops/internal/store"
+	"github.com/puppe1990/cifra-finops/internal/models"
+	"github.com/puppe1990/cifra-finops/internal/store"
 )
 
 type ContactHandler struct {

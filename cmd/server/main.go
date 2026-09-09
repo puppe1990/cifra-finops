@@ -11,14 +11,14 @@ import (
 	"github.com/puppe1990/amarra-cais/pkg/cais/boot"
 	"github.com/puppe1990/amarra-cais/pkg/cais/meta"
 
-	"github.com/puppe1990/aws-finops/internal/app"
-	"github.com/puppe1990/aws-finops/internal/awsinv"
-	"github.com/puppe1990/aws-finops/internal/crypto"
-	"github.com/puppe1990/aws-finops/internal/db"
-	appi18n "github.com/puppe1990/aws-finops/internal/i18n"
-	"github.com/puppe1990/aws-finops/internal/store"
-	"github.com/puppe1990/aws-finops/internal/syncer"
-	"github.com/puppe1990/aws-finops/web"
+	"github.com/puppe1990/cifra-finops/internal/app"
+	"github.com/puppe1990/cifra-finops/internal/awsinv"
+	"github.com/puppe1990/cifra-finops/internal/crypto"
+	"github.com/puppe1990/cifra-finops/internal/db"
+	appi18n "github.com/puppe1990/cifra-finops/internal/i18n"
+	"github.com/puppe1990/cifra-finops/internal/store"
+	"github.com/puppe1990/cifra-finops/internal/syncer"
+	"github.com/puppe1990/cifra-finops/web"
 )
 
 func main() {

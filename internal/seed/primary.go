@@ -3,9 +3,9 @@ package seed
 import (
 	"fmt"
 
-	"github.com/puppe1990/aws-finops/internal/finops"
-	"github.com/puppe1990/aws-finops/internal/models"
-	"github.com/puppe1990/aws-finops/internal/store"
+	"github.com/puppe1990/cifra-finops/internal/finops"
+	"github.com/puppe1990/cifra-finops/internal/models"
+	"github.com/puppe1990/cifra-finops/internal/store"
 )
 
 func EnsurePrimaryWorkspace(s store.Store, ownerUserID int64) error {

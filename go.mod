@@ -1,4 +1,4 @@
-module github.com/puppe1990/aws-finops
+module github.com/puppe1990/cifra-finops
 
 go 1.26.4
 

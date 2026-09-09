@@ -6,7 +6,7 @@ import (
 	"github.com/puppe1990/amarra-cais/pkg/cais"
 	"github.com/puppe1990/amarra-cais/pkg/cais/console"
 
-	"github.com/puppe1990/aws-finops/internal/store"
+	"github.com/puppe1990/cifra-finops/internal/store"
 )
 
 func openStore(cfg cais.Config) (*store.SQLiteStore, error) {
@@ -30,7 +30,7 @@ func main() {
 
 	active := s
 	if err := console.Run(console.Options{
-		AppName:  "aws-finops",
+		AppName:  "cifra-finops",
 		Config:   cfg,
 		Bindings: bindings(active),
 		Reload: func() (map[string]any, error) {

@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/puppe1990/aws-finops/internal/models"
+	"github.com/puppe1990/cifra-finops/internal/models"
 )
 
 func TestSpikeMonths_flagsFiftyPercentJump(t *testing.T) {

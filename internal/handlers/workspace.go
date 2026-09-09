@@ -11,11 +11,11 @@ import (
 	"github.com/puppe1990/amarra-cais/pkg/cais/meta"
 	"github.com/puppe1990/amarra-cais/pkg/cais/session"
 
-	"github.com/puppe1990/aws-finops/internal/finops"
-	appi18n "github.com/puppe1990/aws-finops/internal/i18n"
-	"github.com/puppe1990/aws-finops/internal/locale"
-	"github.com/puppe1990/aws-finops/internal/models"
-	"github.com/puppe1990/aws-finops/internal/store"
+	"github.com/puppe1990/cifra-finops/internal/finops"
+	appi18n "github.com/puppe1990/cifra-finops/internal/i18n"
+	"github.com/puppe1990/cifra-finops/internal/locale"
+	"github.com/puppe1990/cifra-finops/internal/models"
+	"github.com/puppe1990/cifra-finops/internal/store"
 )
 
 type workspace struct {

@@ -15,7 +15,7 @@ import (
 	caissqlite "github.com/puppe1990/amarra-cais/pkg/cais/sqlite"
 	"github.com/puppe1990/amarra-cais/pkg/cais/sqllog"
 
-	"github.com/puppe1990/aws-finops/internal/models"
+	"github.com/puppe1990/cifra-finops/internal/models"
 )
 
 var ErrEmailTaken = errors.New("email already registered")

@@ -44,7 +44,7 @@ var enMessages = map[string]string{
 	"home.tagline":         "Mini Go app with HTMX, Tailwind, and SQLite.",
 	"home.contact_link":    "Contact",
 	"home.default_name":    "Developer",
-	"home.rails_heading":   "The AWS ledger.",
+	"home.rails_heading":   "The multi cloud finops ledger.",
 	"home.rails_subtitle":  "%s reads inventory, estimates burn, and isolates each customer in a workspace.",
 	"home.stack":           "Cais · Go · Inertia · Svelte · SQLite",
 	"home.next_steps":      "Next steps",
@@ -76,7 +76,7 @@ var enMessages = map[string]string{
 	"lang.pt":     "PT",
 	"workspace":   "Workspace",
 
-	"auth.tagline":    "The AWS ledger",
+	"auth.tagline":    "The multi cloud finops ledger",
 	"auth.login_book": "Sign in to the ledger",
 
 	"home.open_ledger":    "Open the ledger",

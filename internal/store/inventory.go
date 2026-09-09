@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/puppe1990/aws-finops/internal/models"
+	"github.com/puppe1990/cifra-finops/internal/models"
 )
 
 func (s *SQLiteStore) ReplaceResources(accountID int64, resources []models.CloudResource) error {

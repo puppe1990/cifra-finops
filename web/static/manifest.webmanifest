@@ -1,7 +1,7 @@
 {
   "name": "Cifra",
   "short_name": "Cifra",
-  "description": "The AWS ledger",
+  "description": "The multi cloud finops ledger",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0B100E",

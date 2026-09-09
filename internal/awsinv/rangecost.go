@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/costexplorer"
 	cetypes "github.com/aws/aws-sdk-go-v2/service/costexplorer/types"
 
-	"github.com/puppe1990/aws-finops/internal/models"
+	"github.com/puppe1990/cifra-finops/internal/models"
 )
 
 func collectCostByMonth(ctx context.Context, cfg aws.Config, from, to time.Time) ([]models.CostLine, error) {
