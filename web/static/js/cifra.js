@@ -30,6 +30,8 @@
           const show = input.type === "password";
           input.type = show ? "text" : "password";
           el.setAttribute("aria-pressed", show ? "true" : "false");
+          const label = el.getAttribute(show ? "data-amarra-label-hide" : "data-amarra-label-show");
+          if (label) el.setAttribute("aria-label", label);
         });
       },
     });

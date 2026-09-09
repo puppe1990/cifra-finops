@@ -5,7 +5,10 @@ var enMessages = map[string]string{
 	"auth.welcome":                     "Welcome!",
 	"auth.login_title":                 "Sign in",
 	"auth.login_submit":                "Sign in",
+	"auth.email_label":                 "Email",
 	"auth.password_label":              "Password",
+	"auth.show_password":               "Show password",
+	"auth.hide_password":               "Hide password",
 	"auth.password_confirmation_label": "Confirm password",
 	"auth.logout":                      "Sign out",
 	"auth.forgot_password":             "Forgot password?",
@@ -75,7 +78,6 @@ var enMessages = map[string]string{
 
 	"auth.tagline":    "The AWS ledger",
 	"auth.login_book": "Sign in to the ledger",
-	"auth.demo_hint":  "Demo: demo@example.com / password",
 
 	"home.open_ledger":    "Open the ledger",
 	"home.new_workspace":  "New workspace",

@@ -72,6 +72,20 @@ func TestLabels_ledgerMonthKeys(t *testing.T) {
 	}
 }
 
+func TestLabels_passwordToggleKeys(t *testing.T) {
+	en := Labels("en")
+	pt := Labels("pt-BR")
+	if en["auth.show_password"] == "" || pt["auth.show_password"] == "" {
+		t.Fatal("missing auth.show_password")
+	}
+	if en["auth.hide_password"] == "" || pt["auth.hide_password"] == "" {
+		t.Fatal("missing auth.hide_password")
+	}
+	if _, ok := en["auth.demo_hint"]; ok {
+		t.Fatal("auth.demo_hint should be removed")
+	}
+}
+
 func TestLabels_sameKeysEnAndPt(t *testing.T) {
 	en := Labels("en")
 	pt := Labels("pt-BR")

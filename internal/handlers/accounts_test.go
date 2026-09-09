@@ -14,6 +14,31 @@ import (
 	"github.com/puppe1990/aws-finops/internal/seed"
 )
 
+func TestAccountsHandler_List_secretKeyHasEyeToggle(t *testing.T) {
+	s := setupTestStore(t)
+	uid, err := s.CreateUser("ops@example.com", "hash")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv(finops.SeedAccountEnv, "111111111111")
+	if err := seed.EnsurePrimaryWorkspace(s, uid); err != nil {
+		t.Fatal(err)
+	}
+	h := NewAccountsHandler(s, testSite(), cais.Config{}, setupTestViews(t), nil)
+	req := inertiaRequest(http.MethodGet, "/accounts", nil)
+	req = session.WithUserID(req, uid)
+	rr := httptest.NewRecorder()
+	h.List(rr, req)
+
+	if rr.Code != http.StatusOK && rr.Code != http.StatusSeeOther {
+		t.Fatalf("status = %d body=%s", rr.Code, rr.Body.String())
+	}
+	if rr.Code == http.StatusSeeOther {
+		t.Fatal("redirected; workspace missing for list")
+	}
+	assertPasswordEyeToggles(t, rr.Body.String(), 1)
+}
+
 func TestAccountsHandler_Create_updatesExistingToAccessKeys(t *testing.T) {
 	s := setupTestStore(t)
 	uid, err := s.CreateUser("ops@example.com", "hash")

@@ -3,6 +3,7 @@ package handlers
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/puppe1990/amarra-cais/pkg/amarra/view"
@@ -45,4 +46,20 @@ func setupTestStore(t *testing.T) store.Store {
 	}
 	t.Cleanup(func() { _ = s.Close() })
 	return s
+}
+
+func assertPasswordEyeToggles(t *testing.T, body string, want int) {
+	t.Helper()
+	if n := strings.Count(body, `type="password"`); n != want {
+		t.Errorf("password inputs = %d, want %d", n, want)
+	}
+	if n := strings.Count(body, `amarra-hook="password"`); n != want {
+		t.Errorf("password toggles = %d, want %d", n, want)
+	}
+	if !strings.Contains(body, "<svg") {
+		t.Error("password toggle missing svg eye")
+	}
+	if strings.Contains(body, ">show</button>") {
+		t.Error("password toggle still uses text show")
+	}
 }
