@@ -5,7 +5,6 @@ import (
 
 	"github.com/puppe1990/amarra-cais/pkg/amarra/view"
 	"github.com/puppe1990/amarra-cais/pkg/cais"
-	"github.com/puppe1990/amarra-cais/pkg/cais/httpx"
 
 	"github.com/puppe1990/aws-finops/internal/locale"
 )
@@ -20,7 +19,7 @@ func NewLocaleHandler(cfg cais.Config, views *view.Renderer) *LocaleHandler {
 }
 
 func (h *LocaleHandler) Post(w http.ResponseWriter, r *http.Request) {
-	if err := httpx.ParseFormOrJSON(r); err != nil {
+	if err := parseFormBody(r); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

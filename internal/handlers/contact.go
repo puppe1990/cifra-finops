@@ -7,7 +7,6 @@ import (
 	"github.com/puppe1990/amarra-cais/pkg/amarra/view"
 	"github.com/puppe1990/amarra-cais/pkg/cais"
 	"github.com/puppe1990/amarra-cais/pkg/cais/flash"
-	"github.com/puppe1990/amarra-cais/pkg/cais/httpx"
 	"github.com/puppe1990/amarra-cais/pkg/cais/i18n"
 	"github.com/puppe1990/amarra-cais/pkg/cais/meta"
 	"github.com/puppe1990/amarra-cais/pkg/cais/validate"
@@ -33,7 +32,7 @@ func (h *ContactHandler) Get(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ContactHandler) Post(w http.ResponseWriter, r *http.Request) {
-	if err := httpx.ParseFormOrJSON(r); err != nil {
+	if err := parseFormBody(r); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
