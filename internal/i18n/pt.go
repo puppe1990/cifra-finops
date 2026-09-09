@@ -85,6 +85,9 @@ var ptMessages = map[string]string{
 	"home.eyebrow_seeded": "Multi-tenant · conta %s já vinculada",
 	"home.eyebrow_empty":  "Multi-tenant · vincule uma conta AWS no workspace",
 
+	"dash.cloud_all":         "Geral",
+	"dash.cloud_aws":         "AWS",
+	"dash.cloud_hetzner":     "Hetzner",
 	"dash.month":             "Mês corrente",
 	"dash.sync":              "Sincronizar",
 	"dash.runrate":           "Run-rate mensal",
