@@ -135,6 +135,44 @@ func TestDashboardHandler_pastMonthUsesOverlayNotSQLite(t *testing.T) {
 	}
 }
 
+func TestDashboardHandler_currentMonthUsesCEOverlay(t *testing.T) {
+	s := setupTestStore(t)
+	uid, err := s.CreateUser("ops@example.com", "hash")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv(finops.SeedAccountEnv, "111111111111")
+	if err := seed.EnsurePrimaryWorkspace(s, uid); err != nil {
+		t.Fatal(err)
+	}
+	tenant, _ := s.FindTenantBySlug(finops.PrimaryTenantSlug)
+	accounts, _ := s.ListCloudAccounts(tenant.ID)
+	_ = s.ReplaceFindings(accounts[0].ID, []models.Finding{{
+		Kind: finops.FindingCEDenied, Severity: "warning",
+	}})
+
+	col := stubMonthCollector{lines: []models.CostLine{{
+		Service: "Amazon Lightsail", MonthlyCents: 636, Source: finops.SourceCE,
+		PeriodStart: "2026-08-01", PeriodEnd: "2026-09-01",
+	}}}
+	h := NewDashboardHandler(setupTestRenderer(t), s, testSite(), cais.Config{}, setupTestViews(t)).
+		WithSyncer(syncer.New(s, col))
+	h.now = func() time.Time { return time.Date(2026, 8, 20, 0, 0, 0, 0, time.UTC) }
+
+	req := inertiaRequest(http.MethodGet, "/dashboard", nil)
+	req = session.WithUserID(req, uid)
+	rr := httptest.NewRecorder()
+	h.ServeHTTP(rr, req)
+
+	body := rr.Body.String()
+	if !strings.Contains(body, "US$ 6,36") {
+		t.Fatalf("current month missing CE overlay: %s", body)
+	}
+	if strings.Contains(body, "Nothing synced yet") {
+		t.Fatal("empty state despite CE overlay")
+	}
+}
+
 func TestDashboardHandler_currentMonthIncludesNextMonthForecast(t *testing.T) {
 	s := setupTestStore(t)
 	uid, err := s.CreateUser("ops@example.com", "hash")

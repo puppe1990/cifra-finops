@@ -58,4 +58,13 @@ func TestCompareHandler_monthlyRowsFromCostExplorer(t *testing.T) {
 	if !strings.Contains(rr.Body.String(), "US$ 19,83") {
 		t.Fatalf("compare usd missing: %s", rr.Body.String())
 	}
+	body := rr.Body.String()
+	jul := strings.Index(body, `href="/dashboard?month=2026-07"`)
+	aug := strings.Index(body, `href="/dashboard?month=2026-08"`)
+	if jul < 0 || aug < 0 || jul > aug {
+		t.Fatalf("want oldest bar on the left, jul=%d aug=%d", jul, aug)
+	}
+	if !strings.Contains(body, `title="US$ 19,83"`) {
+		t.Fatal("compare bar missing hover usd")
+	}
 }

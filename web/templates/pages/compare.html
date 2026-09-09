@@ -11,10 +11,13 @@
 <section class="mt-14">
   <h3 class="font-display text-2xl">{{ index .labels "cmp.by_month" }}</h3>
   {{ if .months }}
-  <div class="mt-8 flex items-end gap-2 sm:gap-3">
+  <div class="mt-8 flex items-end gap-2 pt-6 sm:gap-3">
     {{ range .months }}
-    <a href="/dashboard?month={{ .query }}" data-amarra-drive="true" class="group flex min-w-0 flex-1 flex-col items-center gap-2">
-      <div class="flex w-full items-end bg-ink-800" style="height: 9rem"><div class="w-full bg-copper-400" data-testid="compare-bar" style="height: {{ .pct }}%"></div></div>
+    <a href="/dashboard?month={{ .query }}" data-amarra-drive="true" title="{{ .usd }}" class="group flex min-w-0 flex-1 flex-col items-center gap-2">
+      <div class="relative flex w-full items-end bg-ink-800" style="height: 9rem">
+        <span class="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 -translate-x-1/2 whitespace-nowrap font-mono text-[10px] text-copper-400 opacity-0 group-hover:opacity-100">{{ .usd }}</span>
+        <div class="w-full bg-copper-400 group-hover:bg-copper-500" data-testid="compare-bar" style="height: {{ .pct }}%"></div>
+      </div>
       <span class="font-mono text-[10px] uppercase tracking-widest text-paper-200">{{ .label }}</span>
     </a>
     {{ end }}

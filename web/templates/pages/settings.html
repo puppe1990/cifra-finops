@@ -39,7 +39,8 @@
 <section id="settings-tab-cloudshell"{{ if ne $tab "cloudshell" }} hidden{{ end }} role="tabpanel">
   <h2 class="mt-8 font-display text-4xl">{{ index .labels "set.cloudshell" }}</h2>
   {{ if .cloudShell }}
-  <pre class="mt-3 overflow-x-auto whitespace-pre-wrap break-all border border-ink-700 bg-ink-900 p-4 font-mono text-[11px] text-paper-200" amarra-hook="clipboard" data-amarra-copy="{{ .cloudShell }}">{{ .cloudShell }}</pre>
+  <button type="button" class="mt-6 border border-copper-500 px-4 py-2 font-mono text-xs uppercase tracking-widest text-copper-400" amarra-hook="clipboard" data-amarra-copy="{{ .cloudShell }}">{{ index .labels "set.copy" }}</button>
+  <pre class="mt-3 overflow-x-auto whitespace-pre-wrap break-all border border-ink-700 bg-ink-900 p-4 font-mono text-[11px] text-paper-200">{{ .cloudShell }}</pre>
   {{ end }}
 </section>
 <section id="settings-tab-policy"{{ if ne $tab "policy" }} hidden{{ end }} role="tabpanel">
