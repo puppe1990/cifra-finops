@@ -16,7 +16,9 @@
 </div>
 <section class="mt-10">
   <p class="font-mono text-[10px] uppercase tracking-[0.3em] text-paper-200">{{ index .labels "dash.runrate" }}</p>
-  <p class="mt-2 font-display text-6xl leading-none tracking-tight text-copper-400 md:text-7xl">{{ if .summary.monthlyUSD }}{{ .summary.monthlyUSD }}{{ else }}US$ 0,00{{ end }}</p>
+  {{ if .summary.monthlyUSD }}<p class="mt-2 font-display text-6xl leading-none tracking-tight text-copper-400 md:text-7xl">{{ .summary.monthlyUSD }}</p>{{ end }}
+  {{ if .summary.monthlyEUR }}<p class="mt-2 font-display {{ if .summary.monthlyUSD }}text-4xl{{ else }}text-6xl md:text-7xl{{ end }} leading-none tracking-tight text-copper-400">{{ .summary.monthlyEUR }}</p>{{ end }}
+  {{ if and (not .summary.monthlyUSD) (not .summary.monthlyEUR) }}<p class="mt-2 font-display text-6xl leading-none tracking-tight text-copper-400 md:text-7xl">US$ 0,00</p>{{ end }}
   <div class="mt-4 flex flex-wrap gap-2">
     {{ if and .isCurrent .summary.forecastUSD }}
     <p class="inline-flex border border-copper-500 px-3 py-1 font-mono text-xs uppercase tracking-widest text-copper-400" data-forecast>{{ .summary.forecastLabel }} {{ .summary.forecastUSD }}</p>

@@ -11,12 +11,32 @@ import (
 )
 
 func formatUSD(cents int64) string {
+	return formatMoney(cents, "USD")
+}
+
+func formatEUR(cents int64) string {
+	return formatMoney(cents, "EUR")
+}
+
+func formatMoney(cents int64, currency string) string {
 	sign := ""
 	if cents < 0 {
 		sign = "-"
 		cents = -cents
 	}
-	return fmt.Sprintf("%sUS$ %d,%02d", sign, cents/100, cents%100)
+	switch currency {
+	case "EUR":
+		return fmt.Sprintf("%s€ %d,%02d", sign, cents/100, cents%100)
+	default:
+		return fmt.Sprintf("%sUS$ %d,%02d", sign, cents/100, cents%100)
+	}
+}
+
+func formatCost(cents int64, source string) string {
+	if source == finops.SourceHetzner {
+		return formatEUR(cents)
+	}
+	return formatUSD(cents)
 }
 
 func catalogOrEN(cat *i18n.Catalog) *i18n.Catalog {
@@ -46,6 +66,8 @@ func translateFinding(cat *i18n.Catalog, f models.Finding) (string, string) {
 		return cat.T("finding.stopped_bill.title", f.Title), cat.T("finding.stopped_bill.detail")
 	case finops.FindingUnknownS3Size:
 		return cat.T("finding.unknown_s3.title", f.Title), cat.T("finding.unknown_s3.detail")
+	case finops.FindingUnattachedVolume:
+		return cat.T("finding.unattached_volume.title", f.Title), cat.T("finding.unattached_volume.detail")
 	default:
 		return f.Title, f.Detail
 	}

@@ -21,6 +21,21 @@ func TestSeedAWSAccountID_readsEnvOnly(t *testing.T) {
 	}
 }
 
+func TestHetznerProjectID(t *testing.T) {
+	if got := HetznerProjectID(" Prod "); got != "hz:prod" {
+		t.Fatalf("got %q", got)
+	}
+}
+
+func TestValidHetznerToken(t *testing.T) {
+	if ValidHetznerToken("short") {
+		t.Fatal("short token should be invalid")
+	}
+	if !ValidHetznerToken("tok-1234567890abcdef") {
+		t.Fatal("expected token to be valid")
+	}
+}
+
 func TestSeedAWSAccountID_emptyByDefault(t *testing.T) {
 	t.Setenv(SeedAccountEnv, "")
 	if got := SeedAWSAccountID(); got != "" {

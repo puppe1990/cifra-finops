@@ -1,6 +1,6 @@
 # Architecture
 
-Cifra is a Cais app. HTTP handlers talk to a SQLite `Store`. AWS is reached only through `awsinv.Collector`.
+Cifra is a Cais app. HTTP handlers talk to a SQLite `Store`. AWS is reached only through `awsinv.Collector`. Hetzner Cloud is reached only through `hetznerinv.Collector`.
 
 ```
 browser (Inertia/Svelte)
@@ -9,7 +9,7 @@ browser (Inertia/Svelte)
         │
    store (tenant_id on every query)
         │
-   syncer → awsinv.Collector (Live or stub)
+   syncer → awsinv.Collector / hetznerinv.Collector (Live or stub)
 ```
 
 ## Tenancy

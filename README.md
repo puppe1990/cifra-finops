@@ -13,6 +13,7 @@ The app UI is available in **English** and **Brazilian Portuguese**. Use the **E
 - Without CE, estimates monthly burn from inventory: Lightsail (instances + IPs) and S3
 - Shows the minimum IAM policy needed for real billing data
 - Lets each workspace link more AWS accounts (default credential chain or encrypted access keys)
+- Links Hetzner Cloud projects with a read API token and estimates EUR monthly burn from live inventory (servers, volumes, IPs, load balancers, snapshots, traffic)
 
 Development login: `demo@example.com` / `password`.
 

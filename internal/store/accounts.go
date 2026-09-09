@@ -4,15 +4,19 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/puppe1990/cifra-finops/internal/finops"
 	"github.com/puppe1990/cifra-finops/internal/models"
 )
 
 func (s *SQLiteStore) CreateCloudAccount(acc models.CloudAccount) (int64, error) {
+	if acc.Provider == "" {
+		acc.Provider = finops.ProviderAWS
+	}
 	res, err := s.db.Exec(
 		`INSERT INTO cloud_accounts
-         (tenant_id, aws_account_id, alias, region, auth_mode, access_key_id, secret_cipher, is_primary)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-		acc.TenantID, acc.AWSAccountID, acc.Alias, acc.Region, acc.AuthMode,
+         (tenant_id, provider, aws_account_id, alias, region, auth_mode, access_key_id, secret_cipher, is_primary)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		acc.TenantID, acc.Provider, acc.AWSAccountID, acc.Alias, acc.Region, acc.AuthMode,
 		acc.AccessKeyID, acc.SecretCipher, boolToInt(acc.IsPrimary),
 	)
 	if err != nil {
@@ -59,7 +63,7 @@ func (s *SQLiteStore) UpdateCloudAccountAuth(acc models.CloudAccount) error {
 
 func (s *SQLiteStore) FindCloudAccount(id int64) (models.CloudAccount, error) {
 	return s.scanCloudAccount(
-		s.db.QueryRow(`SELECT id, tenant_id, aws_account_id, alias, region, auth_mode,
+		s.db.QueryRow(`SELECT id, tenant_id, provider, aws_account_id, alias, region, auth_mode,
             access_key_id, secret_cipher, is_primary, created_at
             FROM cloud_accounts WHERE id = ?`, id),
 	)
@@ -67,7 +71,7 @@ func (s *SQLiteStore) FindCloudAccount(id int64) (models.CloudAccount, error) {
 
 func (s *SQLiteStore) FindCloudAccountForTenant(tenantID, id int64) (models.CloudAccount, error) {
 	return s.scanCloudAccount(
-		s.db.QueryRow(`SELECT id, tenant_id, aws_account_id, alias, region, auth_mode,
+		s.db.QueryRow(`SELECT id, tenant_id, provider, aws_account_id, alias, region, auth_mode,
             access_key_id, secret_cipher, is_primary, created_at
             FROM cloud_accounts WHERE id = ? AND tenant_id = ?`, id, tenantID),
 	)
@@ -75,7 +79,7 @@ func (s *SQLiteStore) FindCloudAccountForTenant(tenantID, id int64) (models.Clou
 
 func (s *SQLiteStore) ListCloudAccounts(tenantID int64) ([]models.CloudAccount, error) {
 	rows, err := s.db.Query(
-		`SELECT id, tenant_id, aws_account_id, alias, region, auth_mode,
+		`SELECT id, tenant_id, provider, aws_account_id, alias, region, auth_mode,
                 access_key_id, secret_cipher, is_primary, created_at
          FROM cloud_accounts WHERE tenant_id = ? ORDER BY is_primary DESC, alias`,
 		tenantID,
@@ -111,13 +115,16 @@ func scanCloudAccountRow(row accountRow) (models.CloudAccount, error) {
 	var acc models.CloudAccount
 	var primary int
 	err := row.Scan(
-		&acc.ID, &acc.TenantID, &acc.AWSAccountID, &acc.Alias, &acc.Region,
+		&acc.ID, &acc.TenantID, &acc.Provider, &acc.AWSAccountID, &acc.Alias, &acc.Region,
 		&acc.AuthMode, &acc.AccessKeyID, &acc.SecretCipher, &primary, &acc.CreatedAt,
 	)
 	if err != nil {
 		return models.CloudAccount{}, err
 	}
 	acc.IsPrimary = primary == 1
+	if acc.Provider == "" {
+		acc.Provider = finops.ProviderAWS
+	}
 	return acc, nil
 }
 

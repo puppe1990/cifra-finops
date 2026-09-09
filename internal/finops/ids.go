@@ -21,14 +21,23 @@ const (
 
 	SourceEstimate = "estimate"
 	SourceCE       = "ce"
+	SourceHetzner  = "hetzner"
+
+	ProviderAWS     = "aws"
+	ProviderHetzner = "hetzner"
+
+	AuthModeAPIToken = "api_token"
 
 	SyncOK     = "ok"
 	SyncFailed = "failed"
 
-	FindingCEDenied      = "ce_denied"
-	FindingUnattachedIP  = "unattached_ip"
-	FindingUnknownS3Size = "unknown_s3_size"
-	FindingStoppedBill   = "stopped_instance_billed"
+	FindingCEDenied         = "ce_denied"
+	FindingUnattachedIP     = "unattached_ip"
+	FindingUnknownS3Size    = "unknown_s3_size"
+	FindingStoppedBill      = "stopped_instance_billed"
+	FindingUnattachedVolume = "unattached_volume"
+
+	DefaultHetznerRegion = "fsn1"
 )
 
 func SeedAWSAccountID() string {
@@ -45,4 +54,14 @@ func ValidAWSAccountID(id string) bool {
 		}
 	}
 	return true
+}
+
+func HetznerProjectID(alias string) string {
+	slug := strings.ToLower(strings.TrimSpace(alias))
+	slug = strings.ReplaceAll(slug, " ", "-")
+	return "hz:" + slug
+}
+
+func ValidHetznerToken(token string) bool {
+	return len(strings.TrimSpace(token)) >= 16
 }

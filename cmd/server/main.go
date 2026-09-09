@@ -15,6 +15,7 @@ import (
 	"github.com/puppe1990/cifra-finops/internal/awsinv"
 	"github.com/puppe1990/cifra-finops/internal/crypto"
 	"github.com/puppe1990/cifra-finops/internal/db"
+	"github.com/puppe1990/cifra-finops/internal/hetznerinv"
 	appi18n "github.com/puppe1990/cifra-finops/internal/i18n"
 	"github.com/puppe1990/cifra-finops/internal/store"
 	"github.com/puppe1990/cifra-finops/internal/syncer"
@@ -80,7 +81,7 @@ func bootstrapWithConfig(cfg cais.Config) (*app.App, error) {
 		_ = s.Close()
 		return nil, err
 	}
-	sync := syncer.New(s, awsinv.NewLive()).WithDecrypt(func(cipher string) (string, error) {
+	sync := syncer.New(s, awsinv.NewLive()).WithHetzner(hetznerinv.NewLive()).WithDecrypt(func(cipher string) (string, error) {
 		return crypto.Decrypt(appSecret, cipher)
 	})
 

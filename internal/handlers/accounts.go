@@ -65,6 +65,10 @@ func (h *AccountsHandler) Create(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	if strings.TrimSpace(r.FormValue("provider")) == finops.ProviderHetzner {
+		h.createHetzner(w, r, ws)
+		return
+	}
 	awsID := strings.TrimSpace(r.FormValue("aws_account_id"))
 	alias := strings.TrimSpace(r.FormValue("alias"))
 	region := strings.TrimSpace(r.FormValue("region"))
