@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <title>Cifra OG</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+        background: #0b100e;
+        color: #f7f1e2;
+        font-family: "Iowan Old Style", Palatino, "Palatino Linotype", "Book Antiqua", Georgia, serif;
+      }
+      .stage {
+        position: relative;
+        width: 1200px;
+        height: 630px;
+        background:
+          radial-gradient(900px 420px at 88% -10%, rgb(196 98 45 / 0.28), transparent 62%),
+          radial-gradient(700px 380px at 8% 110%, rgb(27 67 56 / 0.55), transparent 58%),
+          #0b100e;
+      }
+      .grain {
+        position: absolute;
+        inset: 0;
+        opacity: 0.1;
+        background-image: radial-gradient(rgb(239 228 204 / 0.9) 0.8px, transparent 0.8px);
+        background-size: 9px 9px;
+      }
+      .rule {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 8px;
+        background: linear-gradient(180deg, #e08a45, #c4622d 55%, #1b4338);
+      }
+      .inner {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 630px;
+        padding: 56px 72px 48px 80px;
+        box-sizing: border-box;
+      }
+      .eyebrow {
+        font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+        font-size: 15px;
+        letter-spacing: 0.38em;
+        text-transform: uppercase;
+        color: #e08a45;
+        margin: 0;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        margin-top: 36px;
+      }
+      .mark {
+        width: 92px;
+        height: 92px;
+        flex: none;
+      }
+      h1 {
+        margin: 0;
+        font-size: 132px;
+        line-height: 0.82;
+        font-weight: 400;
+        letter-spacing: -0.03em;
+      }
+      .tagline {
+        margin: 28px 0 0;
+        max-width: 820px;
+        font-size: 34px;
+        line-height: 1.15;
+        color: #e2d2ad;
+        font-weight: 400;
+      }
+      .foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+      }
+      .pills {
+        display: flex;
+        gap: 12px;
+      }
+      .pill {
+        border: 1px solid rgb(226 210 173 / 0.22);
+        padding: 10px 16px;
+        font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+        font-size: 14px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: #efe4cc;
+      }
+      .host {
+        font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+        font-size: 16px;
+        letter-spacing: 0.08em;
+        color: #e08a45;
+      }
+      .chart {
+        position: absolute;
+        right: 72px;
+        top: 148px;
+        display: flex;
+        align-items: flex-end;
+        gap: 14px;
+        height: 280px;
+        opacity: 0.9;
+      }
+      .chart span {
+        display: block;
+        width: 22px;
+        border-radius: 2px 2px 0 0;
+        background: linear-gradient(180deg, #e08a45, rgb(196 98 45 / 0.25));
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <div class="grain"></div>
+      <div class="rule"></div>
+      <div class="chart" aria-hidden="true">
+        <span style="height: 38%"></span>
+        <span style="height: 52%"></span>
+        <span style="height: 44%"></span>
+        <span style="height: 71%"></span>
+        <span style="height: 58%"></span>
+        <span style="height: 86%"></span>
+        <span style="height: 64%"></span>
+        <span style="height: 96%"></span>
+      </div>
+      <div class="inner">
+        <div>
+          <p class="eyebrow">FinOps multi-cloud</p>
+          <div class="brand">
+            <svg class="mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" aria-hidden="true">
+              <rect width="32" height="32" rx="8" fill="#121816" />
+              <path d="M21.6 9.2a8.4 8.4 0 1 0 0 13.6" fill="none" stroke="#E08A45" stroke-width="3.4" stroke-linecap="round" />
+              <path d="M13 16h7.5" fill="none" stroke="#C4622D" stroke-width="2" stroke-linecap="round" />
+            </svg>
+            <h1>Cifra</h1>
+          </div>
+          <p class="tagline">O livro-caixa FinOps multi-cloud.</p>
+        </div>
+        <div class="foot">
+          <div class="pills">
+            <span class="pill">AWS</span>
+            <span class="pill">Hetzner</span>
+            <span class="pill">Inventário ao vivo</span>
+          </div>
+          <span class="host">finops.gestaobem.com</span>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

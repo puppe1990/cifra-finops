@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     {{ if .CSRFToken }}<meta name="csrf-token" content="{{ .CSRFToken }}" />{{ end }}
     <title>{{ if .Title }}{{ .Title }} · Cifra{{ else }}Cifra{{ end }}</title>
+    {{ template "og_preview" . }}
     <link rel="stylesheet" href="/static/css/styles.css" />
     <link rel="manifest" href="/static/manifest.webmanifest" />
     <meta name="theme-color" content="#121816" />
