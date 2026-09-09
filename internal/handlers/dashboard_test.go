@@ -30,6 +30,21 @@ func TestDashboardHandler_InertiaComponent(t *testing.T) {
 	assertInertiaComponent(t, rr, "Dashboard")
 }
 
+func TestDashboardHandler_pinsSidebarWhileMainScrolls(t *testing.T) {
+	h := NewDashboardHandler(setupTestRenderer(t), setupTestStore(t), testSite(), cais.Config{}, setupTestViews(t))
+
+	req := inertiaRequest(http.MethodGet, "/dashboard", nil)
+	rr := httptest.NewRecorder()
+	h.ServeHTTP(rr, req)
+
+	body := rr.Body.String()
+	for _, class := range []string{"md:sticky", "md:top-0", "md:h-screen", "md:self-start"} {
+		if !strings.Contains(body, class) {
+			t.Errorf("sidebar missing %s", class)
+		}
+	}
+}
+
 func TestDashboardHandler_includesFlashProp(t *testing.T) {
 	h := NewDashboardHandler(setupTestRenderer(t), setupTestStore(t), testSite(), cais.Config{}, setupTestViews(t))
 
