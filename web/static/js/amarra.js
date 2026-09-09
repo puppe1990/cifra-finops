@@ -881,7 +881,7 @@
   register("clipboard", clipboard);
   var ON_CLASSES = ["bg-green-50", "text-green-700"];
   var OFF_CLASSES = ["bg-slate-100", "text-slate-600"];
-  var TOAST_MS = 2e3;
+  var TOAST_MS = 4e3;
   function csrfTokenFromMeta(htmlOrDoc) {
     if (!htmlOrDoc) return "";
     if (typeof htmlOrDoc === "string") {
@@ -901,20 +901,39 @@
     if (!message || !doc) return;
     const host = doc.getElementById?.("amarra-toast-host");
     if (!host) return;
-    if (host._amarraToastTimer) {
-      clearTimeout(host._amarraToastTimer);
-      host._amarraToastTimer = null;
-    }
-    host.innerHTML = '<div class="amarra-toast-enter fixed top-24 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 border border-slate-700/50" role="status"><span class="text-xs font-bold"></span></div>';
-    const span = host.querySelector?.("span");
-    if (span) span.textContent = message;
+    const kind = opts.kind || "info";
     const duration = opts.duration ?? TOAST_MS;
-    if (duration > 0) {
-      host._amarraToastTimer = setTimeout(() => {
-        host.innerHTML = "";
-        host._amarraToastTimer = null;
-      }, duration);
-    }
+    const id = "amarra-toast-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7);
+
+    const toast = doc.createElement("div");
+    toast.id = id;
+    toast.className = "amarra-toast amarra-toast-" + kind + " amarra-toast-enter";
+    toast.setAttribute("role", "status");
+    const kindMark = { success: "\u2713", error: "\u2715", warning: "\u26A0", info: "i" }[kind] || "i";
+    toast.innerHTML =
+      '<span class="amarra-toast-icon">' + kindMark + '</span>' +
+      '<span class="amarra-toast-message"></span>' +
+      '<button type="button" class="amarra-toast-close" aria-label="Dismiss">&times;</button>';
+    toast.querySelector(".amarra-toast-message").textContent = message;
+
+    const dismiss = () => {
+      if (!toast.isConnected) return;
+      toast.classList.remove("amarra-toast-enter");
+      toast.classList.add("amarra-toast-leave");
+      toast.addEventListener("animationend", () => toast.remove(), { once: true });
+    };
+    toast.querySelector(".amarra-toast-close").addEventListener("click", dismiss);
+
+    host.appendChild(toast);
+    if (duration > 0) setTimeout(dismiss, duration);
+  }
+  // Surface flash messages rendered in the layout as animated toasts.
+  function showInitialFlash(doc) {
+    if (!doc?.querySelector) return;
+    const el = doc.querySelector("[data-amarra-flash]");
+    if (!el) return;
+    showToast(el.textContent.trim(), doc, { kind: el.getAttribute("data-amarra-flash-kind") || "info" });
+    el.remove();
   }
   function applyFocus(selector, doc) {
     if (!selector || !doc?.querySelector) return;
@@ -972,13 +991,15 @@
     if (doc.documentElement?.dataset) doc.documentElement.dataset.amarraHook = "true";
     register("clipboard", clipboard);
     scan(doc);
+    showInitialFlash(doc);
     let optimistic = null;
     doc.addEventListener("amarra:toast", (ev) => {
-      showToast(ev.detail?.message ?? "", doc, opts);
+      showToast(ev.detail?.message ?? "", doc, { ...opts, kind: ev.detail?.kind });
     });
     doc.addEventListener("amarra:morphed", () => {
       optimistic = null;
       afterMorph(doc);
+      showInitialFlash(doc);
       scan(doc);
     });
     doc.addEventListener("amarra:drive-error", () => {
@@ -1428,18 +1449,35 @@ ${lines.join("\n")}
         for (const op of parseSSE(html)) applyOp(op, doc, opts);
         return { action: "stream" };
       }
-      return applyDriveResponse({
-        status: res.status,
-        html,
-        url: res.url || url,
-        main: doc?.querySelector?.("#amarra-main") ?? opts.main ?? null,
-        morphFn: opts.morphFn,
-        location,
-        history,
-        document: doc,
-        push: opts.push !== false,
-        window: win
-      });
+      const apply = () =>
+        applyDriveResponse({
+          status: res.status,
+          html,
+          url: res.url || url,
+          main: doc?.querySelector?.("#amarra-main") ?? opts.main ?? null,
+          morphFn: opts.morphFn,
+          location,
+          history,
+          document: doc,
+          push: opts.push !== false,
+          window: win
+        });
+      if (typeof doc?.startViewTransition === "function") {
+        let result;
+        doc.startViewTransition(() => {
+          result = apply();
+        });
+        return result;
+      }
+      // Fallback: fade the morphed region in when View Transitions are unsupported.
+      const main = doc?.querySelector?.("#amarra-main");
+      const result = apply();
+      if (main) {
+        main.classList.remove("amarra-page-enter");
+        void main.offsetWidth; // restart the animation on the fresh content
+        main.classList.add("amarra-page-enter");
+      }
+      return result;
     } finally {
       hideProgress(doc);
     }

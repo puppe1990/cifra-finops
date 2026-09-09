@@ -28,7 +28,7 @@
       {{ template "shell_aside" . }}
       <main id="amarra-main" class="min-w-0 flex-1 px-6 py-8 md:px-10">
         <div id="amarra-toast-host" aria-live="polite"></div>
-        {{ if .Flash }}<div class="mb-6 border border-copper-500 px-4 py-3 font-mono text-xs text-copper-400" role="status">{{ .Flash }}</div>{{ end }}
+        {{ if .Flash }}<div class="mb-6 border border-copper-500 px-4 py-3 font-mono text-xs text-copper-400" role="status" data-amarra-flash data-amarra-flash-kind="{{ if eq .FlashKind "notice" }}success{{ else }}error{{ end }}">{{ .Flash }}</div>{{ end }}
         {{ template "content" . }}
       </main>
     </div>
