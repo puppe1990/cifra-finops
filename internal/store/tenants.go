@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/puppe1990/aws-finops/internal/models"
+	"github.com/puppe1990/cifra-finops/internal/models"
 )
 
 func (s *SQLiteStore) CreateTenant(name, slug string) (int64, error) {

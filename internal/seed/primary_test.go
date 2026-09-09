@@ -3,8 +3,8 @@ package seed
 import (
 	"testing"
 
-	"github.com/puppe1990/aws-finops/internal/finops"
-	"github.com/puppe1990/aws-finops/internal/store"
+	"github.com/puppe1990/cifra-finops/internal/finops"
+	"github.com/puppe1990/cifra-finops/internal/store"
 )
 
 func TestEnsurePrimaryWorkspace_attachesSeededAccount(t *testing.T) {

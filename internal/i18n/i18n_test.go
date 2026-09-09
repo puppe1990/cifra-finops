@@ -72,6 +72,23 @@ func TestLabels_ledgerMonthKeys(t *testing.T) {
 	}
 }
 
+func TestLabels_multiCloudLedgerCopy(t *testing.T) {
+	en := Labels("en")
+	pt := Labels("pt-BR")
+	if en["auth.tagline"] != "The multi cloud finops ledger" {
+		t.Fatalf("auth.tagline en=%q", en["auth.tagline"])
+	}
+	if en["home.rails_heading"] != "The multi cloud finops ledger." {
+		t.Fatalf("home.rails_heading en=%q", en["home.rails_heading"])
+	}
+	if pt["auth.tagline"] != "O livro-caixa FinOps multi-cloud" {
+		t.Fatalf("auth.tagline pt=%q", pt["auth.tagline"])
+	}
+	if pt["home.rails_heading"] != "O livro-caixa FinOps multi-cloud." {
+		t.Fatalf("home.rails_heading pt=%q", pt["home.rails_heading"])
+	}
+}
+
 func TestLabels_passwordToggleKeys(t *testing.T) {
 	en := Labels("en")
 	pt := Labels("pt-BR")

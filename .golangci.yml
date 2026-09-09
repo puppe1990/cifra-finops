@@ -23,7 +23,7 @@ formatters:
   settings:
     goimports:
       local-prefixes:
-        - github.com/puppe1990/aws-finops
+        - github.com/puppe1990/cifra-finops
   exclusions:
     generated: lax
     paths:

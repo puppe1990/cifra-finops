@@ -1,4 +1,4 @@
-# aws-finops — AI Conventions
+# cifra-finops — AI Conventions
 
 Primary reader is often an LLM agent. Prefer small greps, small modules, and headless tests.
 

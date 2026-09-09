@@ -16,9 +16,9 @@ import (
 	"github.com/puppe1990/amarra-cais/pkg/cais/middleware"
 	"github.com/puppe1990/amarra-cais/pkg/cais/netutil"
 
-	"github.com/puppe1990/aws-finops/internal/crypto"
-	"github.com/puppe1990/aws-finops/internal/store"
-	"github.com/puppe1990/aws-finops/internal/syncer"
+	"github.com/puppe1990/cifra-finops/internal/crypto"
+	"github.com/puppe1990/cifra-finops/internal/store"
+	"github.com/puppe1990/cifra-finops/internal/syncer"
 )
 
 const DevAppSecretDefault = "cifra-dev-only-change-me"
@@ -62,7 +62,7 @@ func New(cfg cais.Config, deps Deps) (*App, error) {
 
 	site := deps.Site
 	if site.AppName == "" {
-		site = meta.SiteFrom("aws-finops", cfg.AppURL)
+		site = meta.SiteFrom("Cifra", cfg.AppURL)
 	}
 	site.Env = cfg.Env
 	deps.Site = site

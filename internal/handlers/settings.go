@@ -7,9 +7,9 @@ import (
 	"github.com/puppe1990/amarra-cais/pkg/cais"
 	"github.com/puppe1990/amarra-cais/pkg/cais/meta"
 
-	"github.com/puppe1990/aws-finops/internal/awsinv"
-	"github.com/puppe1990/aws-finops/internal/finops"
-	"github.com/puppe1990/aws-finops/internal/store"
+	"github.com/puppe1990/cifra-finops/internal/awsinv"
+	"github.com/puppe1990/cifra-finops/internal/finops"
+	"github.com/puppe1990/cifra-finops/internal/store"
 )
 
 type SettingsHandler struct {

@@ -5,9 +5,9 @@ import (
 
 	"github.com/puppe1990/amarra-cais/pkg/cais/i18n"
 
-	"github.com/puppe1990/aws-finops/internal/finops"
-	appi18n "github.com/puppe1990/aws-finops/internal/i18n"
-	"github.com/puppe1990/aws-finops/internal/models"
+	"github.com/puppe1990/cifra-finops/internal/finops"
+	appi18n "github.com/puppe1990/cifra-finops/internal/i18n"
+	"github.com/puppe1990/cifra-finops/internal/models"
 )
 
 func formatUSD(cents int64) string {

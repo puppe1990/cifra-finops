@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/puppe1990/aws-finops/internal/awsinv"
-	"github.com/puppe1990/aws-finops/internal/models"
+	"github.com/puppe1990/cifra-finops/internal/awsinv"
+	"github.com/puppe1990/cifra-finops/internal/models"
 )
 
 type stubMonthCollector struct {

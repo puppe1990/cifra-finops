@@ -9,9 +9,9 @@ import (
 	"github.com/puppe1990/amarra-cais/pkg/cais"
 	"github.com/puppe1990/amarra-cais/pkg/cais/session"
 
-	"github.com/puppe1990/aws-finops/internal/crypto"
-	"github.com/puppe1990/aws-finops/internal/finops"
-	"github.com/puppe1990/aws-finops/internal/seed"
+	"github.com/puppe1990/cifra-finops/internal/crypto"
+	"github.com/puppe1990/cifra-finops/internal/finops"
+	"github.com/puppe1990/cifra-finops/internal/seed"
 )
 
 func TestAccountsHandler_List_secretKeyHasEyeToggle(t *testing.T) {

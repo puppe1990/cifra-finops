@@ -3,8 +3,8 @@ package handlers
 import (
 	"testing"
 
-	"github.com/puppe1990/aws-finops/internal/finops"
-	"github.com/puppe1990/aws-finops/internal/models"
+	"github.com/puppe1990/cifra-finops/internal/finops"
+	"github.com/puppe1990/cifra-finops/internal/models"
 )
 
 func TestServiceProps_nestsUsageTypesUnderService(t *testing.T) {

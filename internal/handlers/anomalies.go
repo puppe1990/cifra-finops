@@ -11,9 +11,9 @@ import (
 	"github.com/puppe1990/amarra-cais/pkg/cais/flash"
 	"github.com/puppe1990/amarra-cais/pkg/cais/meta"
 
-	"github.com/puppe1990/aws-finops/internal/awsinv"
-	"github.com/puppe1990/aws-finops/internal/store"
-	"github.com/puppe1990/aws-finops/internal/syncer"
+	"github.com/puppe1990/cifra-finops/internal/awsinv"
+	"github.com/puppe1990/cifra-finops/internal/store"
+	"github.com/puppe1990/cifra-finops/internal/syncer"
 )
 
 type AnomaliesHandler struct {

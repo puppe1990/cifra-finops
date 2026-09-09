@@ -3,7 +3,7 @@ package store
 import (
 	"testing"
 
-	"github.com/puppe1990/aws-finops/internal/models"
+	"github.com/puppe1990/cifra-finops/internal/models"
 )
 
 func newTestStore(t *testing.T) *SQLiteStore {

@@ -6,8 +6,8 @@ import (
 
 	"github.com/puppe1990/amarra-cais/pkg/cais/i18n"
 
-	"github.com/puppe1990/aws-finops/internal/awsinv"
-	"github.com/puppe1990/aws-finops/internal/models"
+	"github.com/puppe1990/cifra-finops/internal/awsinv"
+	"github.com/puppe1990/cifra-finops/internal/models"
 )
 
 func MonthDeltaBps(curr, prev int64) (int64, bool) {

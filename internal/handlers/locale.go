@@ -6,7 +6,7 @@ import (
 	"github.com/puppe1990/amarra-cais/pkg/amarra/view"
 	"github.com/puppe1990/amarra-cais/pkg/cais"
 
-	"github.com/puppe1990/aws-finops/internal/locale"
+	"github.com/puppe1990/cifra-finops/internal/locale"
 )
 
 type LocaleHandler struct {

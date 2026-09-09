@@ -3,7 +3,7 @@ package awsinv
 import (
 	"testing"
 
-	"github.com/puppe1990/aws-finops/internal/finops"
+	"github.com/puppe1990/cifra-finops/internal/finops"
 )
 
 func TestCEGroupLine_splitsServiceAndUsageType(t *testing.T) {

@@ -16,7 +16,7 @@ import (
 	"github.com/puppe1990/amarra-cais/pkg/cais/middleware"
 	"github.com/puppe1990/amarra-cais/pkg/cais/session"
 
-	"github.com/puppe1990/aws-finops/internal/store"
+	"github.com/puppe1990/cifra-finops/internal/store"
 )
 
 func newAuthHandler(t *testing.T) (*AuthHandler, store.Store) {
@@ -24,6 +24,22 @@ func newAuthHandler(t *testing.T) (*AuthHandler, store.Store) {
 	s := setupTestStore(t)
 	h := NewAuthHandler(setupTestRenderer(t), s, testSite(), s.Sessions(), cais.Config{}, i18n.DefaultCatalog(), setupTestViews(t))
 	return h, s
+}
+
+func TestAuth_Login_usesMultiCloudLedgerTagline(t *testing.T) {
+	h, _ := newAuthHandler(t)
+
+	req := httptest.NewRequest(http.MethodGet, "/login", nil)
+	rr := httptest.NewRecorder()
+	h.Login(rr, req)
+
+	body := rr.Body.String()
+	if !strings.Contains(body, "The multi cloud finops ledger") {
+		t.Errorf("missing multi cloud tagline: %s", body)
+	}
+	if strings.Contains(body, "The AWS ledger") {
+		t.Error("old AWS ledger copy still on login")
+	}
 }
 
 func TestAuth_Login_blankFieldsAndPasswordEye(t *testing.T) {

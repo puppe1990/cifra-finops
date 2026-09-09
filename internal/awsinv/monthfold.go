@@ -3,7 +3,7 @@ package awsinv
 import (
 	"time"
 
-	"github.com/puppe1990/aws-finops/internal/models"
+	"github.com/puppe1990/cifra-finops/internal/models"
 )
 
 type MonthCost struct {

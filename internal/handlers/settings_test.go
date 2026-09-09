@@ -9,7 +9,7 @@ import (
 	"github.com/puppe1990/amarra-cais/pkg/cais"
 	"github.com/puppe1990/amarra-cais/pkg/cais/session"
 
-	"github.com/puppe1990/aws-finops/internal/seed"
+	"github.com/puppe1990/cifra-finops/internal/seed"
 )
 
 func TestSettingsHandler_includesPolicyAndCloudShell(t *testing.T) {

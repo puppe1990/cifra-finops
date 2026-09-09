@@ -14,7 +14,7 @@ import (
 	"github.com/puppe1990/amarra-cais/pkg/cais/session"
 	"github.com/puppe1990/amarra-cais/pkg/cais/validate"
 
-	"github.com/puppe1990/aws-finops/internal/store"
+	"github.com/puppe1990/cifra-finops/internal/store"
 )
 
 type AuthHandler struct {

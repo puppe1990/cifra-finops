@@ -1,6 +1,6 @@
-# Cifra — AWS FinOps
+# Cifra — multi cloud FinOps
 
-Multi-tenant AWS FinOps, built with [amarra-cais](https://github.com/puppe1990/amarra-cais) (Go + Amarra Views + Drive + SQLite).
+Multi-tenant FinOps, built with [amarra-cais](https://github.com/puppe1990/amarra-cais) (Go + Amarra Views + Drive + SQLite).
 
 The app UI is available in **English** and **Brazilian Portuguese**. Use the **EN / PT** control in the sidebar (and on the public pages) to switch. The choice is stored in the `cifra_locale` cookie.
 

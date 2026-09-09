@@ -1,9 +1,9 @@
 package db
 
 import (
-	"github.com/puppe1990/aws-finops/internal/models"
-	"github.com/puppe1990/aws-finops/internal/seed"
-	"github.com/puppe1990/aws-finops/internal/store"
+	"github.com/puppe1990/cifra-finops/internal/models"
+	"github.com/puppe1990/cifra-finops/internal/seed"
+	"github.com/puppe1990/cifra-finops/internal/store"
 )
 
 // RunSeeds populates demo data. Safe to run multiple times.
