@@ -1377,6 +1377,21 @@ ${lines.join("\n")}
     }
     const fragment = extractMainHTML(html);
     if (fragment == null) return { action: "ignore" };
+    // Layout switch (e.g. logout app→auth, login auth→app) needs a full
+    // navigation: morphing only #amarra-main would keep the old shell
+    // (sidebar, user email, sign-out) on screen.
+    const nextLayout = (String(html).match(/<html[^>]*\bdata-layout="([^"]+)"/i) || [])[1];
+    const currentLayout = doc?.documentElement?.dataset?.layout;
+    if (nextLayout && currentLayout && nextLayout !== currentLayout) {
+      if (win?.location) {
+        if (String(win.location.href) === String(url)) {
+          win.location.reload();
+        } else {
+          win.location.assign(url);
+        }
+      }
+      return { action: "reload" };
+    }
     applyHead(doc, html);
     if (main) (morphFn ?? morph)(main, fragment);
     if (status === 200 && push && url && history?.pushState) {
