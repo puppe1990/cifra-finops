@@ -215,14 +215,14 @@ var ptMessages = map[string]string{
 	"kind.hetzner_load_balancer": "Load balancer Hetzner",
 	"kind.hetzner_snapshot":      "Snapshot Hetzner",
 
-	"finding.ce_denied.title":      "Cost Explorer sem permissão",
-	"finding.ce_denied.detail":     "A IAM desta conta não permite ce:GetCostAndUsage. O Cifra estima o gasto pelo inventário (Lightsail + S3).",
+	"finding.ce_denied.title":          "Cost Explorer sem permissão",
+	"finding.ce_denied.detail":         "A IAM desta conta não permite ce:GetCostAndUsage. O Cifra estima o gasto pelo inventário (Lightsail + S3).",
 	"finding.unattached_ip.title":      "IP ocioso: %s",
 	"finding.unattached_ip.detail":     "Um IP sem recurso ainda gera cobrança todo mês.",
 	"finding.stopped_bill.title":       "Instância parada ainda cobra: %s",
 	"finding.stopped_bill.detail":      "Um servidor desligado ainda gera a cobrança mensal.",
 	"finding.unattached_volume.title":  "Volume solto: %s",
 	"finding.unattached_volume.detail": "Um volume sem servidor ainda cobra por GB todo mês.",
-	"finding.unknown_s3.title":     "%s buckets S3 sem tamanho",
-	"finding.unknown_s3.detail":    "Sem CloudWatch o Cifra não estima storage. Libere cloudwatch:GetMetricStatistics ou s3:ListBucket.",
+	"finding.unknown_s3.title":         "%s buckets S3 sem tamanho",
+	"finding.unknown_s3.detail":        "Sem CloudWatch o Cifra não estima storage. Libere cloudwatch:GetMetricStatistics ou s3:ListBucket.",
 }
