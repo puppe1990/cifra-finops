@@ -8,7 +8,7 @@
     <title>{{ if .Title }}{{ .Title }} · Cifra{{ else }}Cifra{{ end }}</title>
     {{ template "og_preview" . }}
     <link rel="stylesheet" href="/static/css/styles.css" />
-    <meta name="theme-color" content="#121816" />
+    {{ template "pwa_icons" . }}
     <script>
       try {
         if (localStorage.getItem("cifra-theme") === "light") document.documentElement.classList.add("light");
