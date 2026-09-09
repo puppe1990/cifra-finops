@@ -8,7 +8,6 @@ import (
 	"github.com/puppe1990/amarra-cais/pkg/amarra/view"
 	"github.com/puppe1990/amarra-cais/pkg/cais"
 	"github.com/puppe1990/amarra-cais/pkg/cais/flash"
-	"github.com/puppe1990/amarra-cais/pkg/cais/httpx"
 	"github.com/puppe1990/amarra-cais/pkg/cais/i18n"
 	"github.com/puppe1990/amarra-cais/pkg/cais/meta"
 	"github.com/puppe1990/amarra-cais/pkg/cais/passwordreset"
@@ -41,7 +40,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) LoginPost(w http.ResponseWriter, r *http.Request) {
-	if err := httpx.ParseFormOrJSON(r); err != nil {
+	if err := parseFormBody(r); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -80,7 +79,7 @@ func (h *AuthHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) SignUpPost(w http.ResponseWriter, r *http.Request) {
-	if err := httpx.ParseFormOrJSON(r); err != nil {
+	if err := parseFormBody(r); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -149,7 +148,7 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) ForgotPasswordPost(w http.ResponseWriter, r *http.Request) {
-	if err := httpx.ParseFormOrJSON(r); err != nil {
+	if err := parseFormBody(r); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -204,7 +203,7 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) ResetPasswordPost(w http.ResponseWriter, r *http.Request) {
-	if err := httpx.ParseFormOrJSON(r); err != nil {
+	if err := parseFormBody(r); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

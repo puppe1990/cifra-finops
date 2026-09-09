@@ -9,7 +9,6 @@ import (
 	"github.com/puppe1990/amarra-cais/pkg/amarra/view"
 	"github.com/puppe1990/amarra-cais/pkg/cais"
 	"github.com/puppe1990/amarra-cais/pkg/cais/flash"
-	"github.com/puppe1990/amarra-cais/pkg/cais/httpx"
 	"github.com/puppe1990/amarra-cais/pkg/cais/meta"
 
 	"github.com/puppe1990/aws-finops/internal/finops"
@@ -43,7 +42,7 @@ func (h *TenantsHandler) Create(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
-	if err := httpx.ParseFormOrJSON(r); err != nil {
+	if err := parseFormBody(r); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -75,7 +74,7 @@ func (h *TenantsHandler) Switch(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
-	if err := httpx.ParseFormOrJSON(r); err != nil {
+	if err := parseFormBody(r); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

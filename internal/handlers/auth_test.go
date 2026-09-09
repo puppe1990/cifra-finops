@@ -1,7 +1,11 @@
 package handlers
 
 import (
+	"bytes"
+	"io"
+	"mime/multipart"
 	"net/http"
+	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
 	"strings"
@@ -9,6 +13,7 @@ import (
 
 	"github.com/puppe1990/amarra-cais/pkg/cais"
 	"github.com/puppe1990/amarra-cais/pkg/cais/i18n"
+	"github.com/puppe1990/amarra-cais/pkg/cais/middleware"
 	"github.com/puppe1990/amarra-cais/pkg/cais/session"
 
 	"github.com/puppe1990/aws-finops/internal/store"
@@ -33,6 +38,73 @@ func TestAuth_Login_redirectsWhenAuthenticated(t *testing.T) {
 		t.Errorf("status = %d, want 303", rr.Code)
 	}
 	_ = s
+}
+
+func TestAuth_LoginPost_multipartFormAmarraDrive_redirects(t *testing.T) {
+	s, err := store.NewSQLiteStore(":memory:", "development")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = s.Close() })
+	h := NewAuthHandler(setupTestRenderer(t), s, testSite(), s.Sessions(), cais.Config{}, i18n.DefaultCatalog(), setupTestViews(t))
+
+	// Run through the real middleware stack: CSRF parses the body first and
+	// net/http only fills PostForm for multipart, so handlers must mirror it
+	// into r.Form for FormValue to see Amarra Drive multipart submissions.
+	mux := http.NewServeMux()
+	mux.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			h.Login(w, r)
+			return
+		}
+		h.LoginPost(w, r)
+	})
+	var stack http.Handler = mux
+	stack = middleware.CSRF(cais.Config{})(stack)
+	srv := httptest.NewServer(stack)
+	t.Cleanup(srv.Close)
+
+	jar, _ := cookiejar.New(nil)
+	client := srv.Client()
+	client.Jar = jar
+	client.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
+	resp, err := client.Get(srv.URL + "/login")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, _ = io.Copy(io.Discard, resp.Body)
+	_ = resp.Body.Close()
+	var token string
+	for _, c := range resp.Cookies() {
+		if c.Name == "cais_csrf" {
+			token = c.Value
+		}
+	}
+
+	var body bytes.Buffer
+	w := multipart.NewWriter(&body)
+	_ = w.WriteField("email", "demo@example.com")
+	_ = w.WriteField("password", "password")
+	_ = w.Close()
+
+	req, err := http.NewRequest(http.MethodPost, srv.URL+"/login", &body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", w.FormDataContentType())
+	req.Header.Set("X-CSRF-Token", token)
+	resp2, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = resp2.Body.Close() }()
+
+	if resp2.StatusCode != http.StatusSeeOther {
+		t.Errorf("status = %d, want 303", resp2.StatusCode)
+	}
+	if resp2.Header.Get("Location") != "/dashboard" {
+		t.Errorf("Location = %q, want /dashboard", resp2.Header.Get("Location"))
+	}
 }
 
 func TestAuth_LoginPost_invalidCredentials(t *testing.T) {
