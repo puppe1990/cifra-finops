@@ -65,6 +65,26 @@ func TestAuth_Login_blankFieldsAndPasswordEye(t *testing.T) {
 	assertPasswordEyeToggles(t, body, 1)
 }
 
+func TestAuth_Login_linksPWAIconsFromFavicon(t *testing.T) {
+	h, _ := newAuthHandler(t)
+
+	req := httptest.NewRequest(http.MethodGet, "/login", nil)
+	rr := httptest.NewRecorder()
+	h.Login(rr, req)
+
+	body := rr.Body.String()
+	wants := []string{
+		`rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png"`,
+		`rel="icon" href="/static/icons/favicon.svg" type="image/svg+xml"`,
+		`rel="manifest" href="/static/manifest.webmanifest"`,
+	}
+	for _, want := range wants {
+		if !strings.Contains(body, want) {
+			t.Errorf("login missing %q", want)
+		}
+	}
+}
+
 func TestAuth_Login_redirectsWhenAuthenticated(t *testing.T) {
 	h, s := newAuthHandler(t)
 

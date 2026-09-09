@@ -8,7 +8,7 @@
     <title>{{ if .Title }}{{ .Title }}{{ else }}Cifra · {{ index .labels "brand.eyebrow" }}{{ end }}</title>
     {{ template "og_preview" . }}
     <link rel="stylesheet" href="/static/css/styles.css" />
-    <meta name="theme-color" content="#121816" />
+    {{ template "pwa_icons" . }}
     <script src="/static/js/amarra.js" defer></script>
     <script src="/static/js/cifra.js" defer></script>
   </head>

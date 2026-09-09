@@ -8,10 +8,7 @@
     <title>{{ if .Title }}{{ .Title }} · Cifra{{ else }}Cifra{{ end }}</title>
     {{ template "og_preview" . }}
     <link rel="stylesheet" href="/static/css/styles.css" />
-    <link rel="manifest" href="/static/manifest.webmanifest" />
-    <meta name="theme-color" content="#121816" />
-    <link rel="icon" href="/static/icons/favicon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png" />
+    {{ template "pwa_icons" . }}
     <script>
       try {
         if (localStorage.getItem("cifra-theme") === "light") {

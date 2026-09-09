@@ -48,17 +48,33 @@ func TestAppHTML_mobileNavHidesScrollbar(t *testing.T) {
 	}
 }
 
-func TestAppHTML_linksFaviconSVG(t *testing.T) {
+func TestLayouts_linkCifraPWAIcons(t *testing.T) {
 	root := projectRoot(t)
-	html, err := os.ReadFile(filepath.Join(root, "web/templates/layouts/app.html"))
+	partial, err := os.ReadFile(filepath.Join(root, "web/templates/partials/pwa_icons.html"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !bytes.Contains(html, []byte(`rel="icon" href="/static/icons/favicon.svg" type="image/svg+xml"`)) {
-		t.Fatal("app.html missing SVG favicon")
+	for _, want := range []string{
+		`rel="manifest" href="/static/manifest.webmanifest"`,
+		`rel="icon" href="/static/icons/favicon.svg" type="image/svg+xml"`,
+		`rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png"`,
+	} {
+		if !bytes.Contains(partial, []byte(want)) {
+			t.Errorf("pwa_icons.html missing %s", want)
+		}
 	}
-	if !bytes.Contains(html, []byte(`rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png"`)) {
-		t.Fatal("app.html missing apple-touch-icon")
+	for _, rel := range []string{
+		"web/templates/layouts/app.html",
+		"web/templates/layouts/auth.html",
+		"web/templates/layouts/public.html",
+	} {
+		html, err := os.ReadFile(filepath.Join(root, rel))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !bytes.Contains(html, []byte(`{{ template "pwa_icons" . }}`)) {
+			t.Errorf("%s missing pwa_icons partial", rel)
+		}
 	}
 }
 
