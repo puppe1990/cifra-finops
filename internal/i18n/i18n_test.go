@@ -72,6 +72,17 @@ func TestLabels_ledgerMonthKeys(t *testing.T) {
 	}
 }
 
+func TestLabels_brandEyebrow(t *testing.T) {
+	en := Labels("en")
+	pt := Labels("pt-BR")
+	if en["brand.eyebrow"] != "multi cloud FinOps" {
+		t.Fatalf("brand.eyebrow en=%q", en["brand.eyebrow"])
+	}
+	if pt["brand.eyebrow"] != "FinOps multi-cloud" {
+		t.Fatalf("brand.eyebrow pt=%q", pt["brand.eyebrow"])
+	}
+}
+
 func TestLabels_multiCloudLedgerCopy(t *testing.T) {
 	en := Labels("en")
 	pt := Labels("pt-BR")
@@ -86,6 +97,33 @@ func TestLabels_multiCloudLedgerCopy(t *testing.T) {
 	}
 	if pt["home.rails_heading"] != "O livro-caixa FinOps multi-cloud." {
 		t.Fatalf("home.rails_heading pt=%q", pt["home.rails_heading"])
+	}
+}
+
+func TestLabels_settingsNavName(t *testing.T) {
+	en := Labels("en")
+	pt := Labels("pt-BR")
+	if en["nav.settings"] != "Settings" {
+		t.Fatalf("nav.settings en=%q", en["nav.settings"])
+	}
+	if pt["nav.settings"] != "Configurações" {
+		t.Fatalf("nav.settings pt=%q", pt["nav.settings"])
+	}
+	if en["set.title"] != "Settings" {
+		t.Fatalf("set.title en=%q", en["set.title"])
+	}
+	if pt["set.title"] != "Configurações" {
+		t.Fatalf("set.title pt=%q", pt["set.title"])
+	}
+}
+
+func TestLabels_changePasswordKeys(t *testing.T) {
+	en := Labels("en")
+	pt := Labels("pt-BR")
+	for _, k := range []string{"set.password_title", "set.current_password", "set.new_password", "set.password_submit", "set.password_updated", "set.current_password_wrong"} {
+		if en[k] == "" || pt[k] == "" {
+			t.Fatalf("missing %s", k)
+		}
 	}
 }
 

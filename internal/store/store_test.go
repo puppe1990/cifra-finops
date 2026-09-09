@@ -3,6 +3,8 @@ package store
 import (
 	"testing"
 
+	"github.com/puppe1990/amarra-cais/pkg/cais/session"
+
 	"github.com/puppe1990/cifra-finops/internal/models"
 )
 
@@ -14,6 +16,35 @@ func newTestStore(t *testing.T) *SQLiteStore {
 	}
 	t.Cleanup(func() { _ = s.Close() })
 	return s
+}
+
+func TestStore_UpdateUserPassword(t *testing.T) {
+	s := newTestStore(t)
+	oldHash, err := session.HashPassword("oldpass12")
+	if err != nil {
+		t.Fatal(err)
+	}
+	id, err := s.CreateUser("ops@example.com", oldHash)
+	if err != nil {
+		t.Fatal(err)
+	}
+	newHash, err := session.HashPassword("newpass12")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := s.UpdateUserPassword(id, newHash); err != nil {
+		t.Fatal(err)
+	}
+	u, err := s.FindUserByEmail("ops@example.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if session.VerifyPassword(u.PasswordHash, "oldpass12") {
+		t.Fatal("old password still works")
+	}
+	if !session.VerifyPassword(u.PasswordHash, "newpass12") {
+		t.Fatal("new password does not work")
+	}
 }
 
 func TestStore_Migrations(t *testing.T) {

@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     {{ if .CSRFToken }}<meta name="csrf-token" content="{{ .CSRFToken }}" />{{ end }}
-    <title>{{ if .Title }}{{ .Title }}{{ else }}Cifra · FinOps AWS{{ end }}</title>
+    <title>{{ if .Title }}{{ .Title }}{{ else }}Cifra · {{ index .labels "brand.eyebrow" }}{{ end }}</title>
     <link rel="stylesheet" href="/static/css/styles.css" />
     <meta name="theme-color" content="#121816" />
     <script src="/static/js/amarra.js" defer></script>

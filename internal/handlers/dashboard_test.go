@@ -30,6 +30,31 @@ func TestDashboardHandler_InertiaComponent(t *testing.T) {
 	assertInertiaComponent(t, rr, "Dashboard")
 }
 
+func TestDashboardHandler_sidebarUsesMultiCloudEyebrow(t *testing.T) {
+	s := setupTestStore(t)
+	uid, err := s.CreateUser("ops@example.com", "hash")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := seed.EnsurePrimaryWorkspace(s, uid); err != nil {
+		t.Fatal(err)
+	}
+	h := NewDashboardHandler(setupTestRenderer(t), s, testSite(), cais.Config{}, setupTestViews(t))
+
+	req := inertiaRequest(http.MethodGet, "/dashboard", nil)
+	req = session.WithUserID(req, uid)
+	rr := httptest.NewRecorder()
+	h.ServeHTTP(rr, req)
+
+	body := rr.Body.String()
+	if strings.Contains(body, "FinOps AWS") {
+		t.Error("sidebar still says FinOps AWS")
+	}
+	if !strings.Contains(body, "multi cloud FinOps") {
+		t.Errorf("missing multi cloud eyebrow: %s", body)
+	}
+}
+
 func TestDashboardHandler_pinsSidebarWhileMainScrolls(t *testing.T) {
 	h := NewDashboardHandler(setupTestRenderer(t), setupTestStore(t), testSite(), cais.Config{}, setupTestViews(t))
 

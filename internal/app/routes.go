@@ -57,4 +57,5 @@ func registerRoutes(r *cais.Router, deps Deps, cfg cais.Config) {
 	r.Post("/tenants", authN(tenants.Create))
 	r.Post("/tenants/switch", authN(tenants.Switch))
 	r.Get("/settings", authN(settings.Get))
+	r.Post("/settings/password", authN(settings.ChangePassword))
 }
