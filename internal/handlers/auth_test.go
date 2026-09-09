@@ -73,7 +73,7 @@ func TestAuth_LoginPost_multipartFormAmarraDrive_redirects(t *testing.T) {
 		t.Fatal(err)
 	}
 	_, _ = io.Copy(io.Discard, resp.Body)
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	var token string
 	for _, c := range resp.Cookies() {
 		if c.Name == "cais_csrf" {
@@ -97,7 +97,7 @@ func TestAuth_LoginPost_multipartFormAmarraDrive_redirects(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer resp2.Body.Close()
+	defer func() { _ = resp2.Body.Close() }()
 
 	if resp2.StatusCode != http.StatusSeeOther {
 		t.Errorf("status = %d, want 303", resp2.StatusCode)
