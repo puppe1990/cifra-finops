@@ -82,7 +82,7 @@ func (h *CompareHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	months := compareMonthRows(buckets, cat, now)
 	props["months"] = months
 	if len(months) > 0 {
-		props["current"] = months[0]
+		props["current"] = months[len(months)-1]
 	}
 	props["services"] = compareServiceHistory(buckets)
 	props["ceDenied"] = ceDenied

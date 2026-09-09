@@ -80,7 +80,7 @@ func (h *DashboardHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	var overlay []models.CostLine
 	ceDenied := false
-	if !lm.IsCurrent && h.syncer != nil {
+	if h.syncer != nil {
 		ctx, cancel := context.WithTimeout(r.Context(), 25*time.Second)
 		var overlayErr error
 		overlay, overlayErr = h.syncer.CostForMonth(ctx, ws.Tenant.ID, lm.Period)
@@ -157,10 +157,22 @@ func buildTenantView(s store.Store, tenantID int64, cat *i18n.Catalog, lm awsinv
 	}
 
 	shownFindings := findings
-	denied := hasFinding(findings, finops.FindingCEDenied)
+	denied := hasFinding(findings, finops.FindingCEDenied) || ceDenied
+	if source == finops.SourceCE {
+		denied = false
+		var keep []models.Finding
+		for _, f := range shownFindings {
+			if f.Kind != finops.FindingCEDenied {
+				keep = append(keep, f)
+			}
+		}
+		shownFindings = keep
+	}
 	if !lm.IsCurrent {
 		shownFindings = nil
-		denied = ceDenied
+		if source != finops.SourceCE {
+			denied = ceDenied
+		}
 	}
 
 	return tenantView{
@@ -184,7 +196,7 @@ func buildTenantView(s store.Store, tenantID int64, cat *i18n.Catalog, lm awsinv
 }
 
 func monthSpend(s store.Store, accounts []models.CloudAccount, resources []models.CloudResource, cat *i18n.Catalog, lm awsinv.LedgerMonth, overlay []models.CostLine) (int64, []models.CostLine, string, error) {
-	if !lm.IsCurrent {
+	if !lm.IsCurrent || len(overlay) > 0 {
 		monthly, lines, source := sumCostLines(overlay)
 		return monthly, lines, source, nil
 	}

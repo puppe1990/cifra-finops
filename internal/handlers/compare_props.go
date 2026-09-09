@@ -27,7 +27,7 @@ func compareMonthRows(months []awsinv.MonthCost, cat *i18n.Catalog, now time.Tim
 		}
 	}
 	out := make([]map[string]any, n)
-	for i := n - 1; i >= 0; i-- {
+	for i := 0; i < n; i++ {
 		m := months[i]
 		pct := 4
 		if max > 0 {
@@ -50,7 +50,7 @@ func compareMonthRows(months []awsinv.MonthCost, cat *i18n.Catalog, now time.Tim
 				row["deltaUSD"] = formatUSD(m.Cents - months[i-1].Cents)
 			}
 		}
-		out[n-1-i] = row
+		out[i] = row
 	}
 	return out
 }

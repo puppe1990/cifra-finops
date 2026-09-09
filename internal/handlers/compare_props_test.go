@@ -19,7 +19,7 @@ func TestMonthDeltaBps(t *testing.T) {
 	}
 }
 
-func TestCompareMonthRows_newestFirstWithDelta(t *testing.T) {
+func TestCompareMonthRows_oldestFirstWithDelta(t *testing.T) {
 	jul := time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC)
 	aug := time.Date(2026, 8, 1, 0, 0, 0, 0, time.UTC)
 	rows := compareMonthRows([]awsinv.MonthCost{
@@ -29,18 +29,21 @@ func TestCompareMonthRows_newestFirstWithDelta(t *testing.T) {
 	if len(rows) != 2 {
 		t.Fatalf("len=%d", len(rows))
 	}
-	if rows[0]["query"] != "2026-08" || rows[0]["usd"] != "US$ 32,15" {
-		t.Fatalf("current=%v", rows[0])
+	if rows[0]["query"] != "2026-07" || rows[0]["usd"] != "US$ 52,28" {
+		t.Fatalf("oldest=%v", rows[0])
 	}
-	if rows[0]["current"] != true {
+	if rows[1]["query"] != "2026-08" || rows[1]["usd"] != "US$ 32,15" {
+		t.Fatalf("newest=%v", rows[1])
+	}
+	if rows[1]["current"] != true {
 		t.Fatal("august should be current")
 	}
 	want := int64((3215 - 5228) * 10000 / 5228)
-	if rows[0]["deltaBps"] != want {
-		t.Fatalf("deltaBps=%v want %d", rows[0]["deltaBps"], want)
+	if rows[1]["deltaBps"] != want {
+		t.Fatalf("deltaBps=%v want %d", rows[1]["deltaBps"], want)
 	}
-	if rows[1]["query"] != "2026-07" || rows[1]["deltaBps"] != nil {
-		t.Fatalf("july=%v", rows[1])
+	if rows[0]["deltaBps"] != nil {
+		t.Fatalf("july=%v", rows[0])
 	}
 }
 

@@ -211,6 +211,19 @@ func TestSettingsHandler_Get_tabPolicyHidesPassword(t *testing.T) {
 	}
 }
 
+func TestSettingsHandler_Get_cloudshellHasCopyButton(t *testing.T) {
+	body := settingsGET(t, "/settings?tab=cloudshell")
+	if !strings.Contains(body, `id="settings-tab-cloudshell"`) {
+		t.Fatal("missing cloudshell panel")
+	}
+	if !strings.Contains(body, ">Copy</button>") {
+		t.Fatal("cloudshell tab missing Copy button")
+	}
+	if !strings.Contains(body, `amarra-hook="clipboard"`) {
+		t.Fatal("copy button missing clipboard hook")
+	}
+}
+
 func TestSettingsHandler_Get_unknownTabFallsBackToPassword(t *testing.T) {
 	body := settingsGET(t, "/settings?tab=nope")
 	if !strings.Contains(body, `id="settings-tab-password"`) {
