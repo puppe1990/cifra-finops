@@ -30,6 +30,7 @@ type Store interface {
 	CreatePasswordResetToken(userID int64) (string, error)
 	FindPasswordResetUserID(token string) (int64, bool)
 	ResetPasswordWithToken(token, passwordHash string) error
+	UpdateUserPassword(userID int64, passwordHash string) error
 
 	CreateTenant(name, slug string) (int64, error)
 	FindTenantBySlug(slug string) (models.Tenant, error)

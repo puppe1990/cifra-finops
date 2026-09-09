@@ -1,14 +1,49 @@
 {{ define "content" }}
-<h2 class="font-display text-4xl">{{ index .labels "set.title" }}</h2>
-<p class="mt-3 max-w-2xl text-sm leading-relaxed text-paper-200">{{ index .labels "set.lead" }}</p>
-<form action="/sync" method="post" data-amarra-drive="true">
-  {{ csrfField .CSRFToken }}
-  <button type="submit" class="mt-6 border border-copper-500 px-4 py-2 font-mono text-xs uppercase tracking-widest text-copper-400">{{ index .labels "set.sync" }}</button>
-</form>
-{{ if .cloudShell }}
-<h3 class="mt-10 font-display text-2xl">{{ index .labels "set.cloudshell" }}</h3>
-<pre class="mt-3 overflow-x-auto whitespace-pre-wrap break-all border border-ink-700 bg-ink-900 p-4 font-mono text-[11px] text-paper-200" amarra-hook="clipboard" data-amarra-copy="{{ .cloudShell }}">{{ .cloudShell }}</pre>
-{{ end }}
-<h3 class="mt-10 font-display text-2xl">{{ index .labels "set.policy" }}</h3>
-<pre class="mt-3 overflow-x-auto border border-ink-700 bg-ink-900 p-4 font-mono text-[11px] text-paper-200">{{ .policy }}</pre>
+{{ $tab := .settingsTab }}
+<nav class="shell-nav flex gap-1 overflow-x-auto border-b border-ink-700 pr-10 font-mono text-[11px] uppercase tracking-[0.16em]" role="tablist">
+  <a href="/settings?tab=password" role="tab" aria-selected="{{ if eq $tab "password" }}true{{ else }}false{{ end }}" class="whitespace-nowrap border-b-2 px-3 py-2 {{ if eq $tab "password" }}border-copper-500 text-copper-400{{ else }}border-transparent text-paper-200 hover:text-paper-50{{ end }}">{{ index .labels "set.password_title" }}</a>
+  <a href="/settings?tab=sync" role="tab" aria-selected="{{ if eq $tab "sync" }}true{{ else }}false{{ end }}" class="whitespace-nowrap border-b-2 px-3 py-2 {{ if eq $tab "sync" }}border-copper-500 text-copper-400{{ else }}border-transparent text-paper-200 hover:text-paper-50{{ end }}">{{ index .labels "set.title" }}</a>
+  <a href="/settings?tab=cloudshell" role="tab" aria-selected="{{ if eq $tab "cloudshell" }}true{{ else }}false{{ end }}" class="whitespace-nowrap border-b-2 px-3 py-2 {{ if eq $tab "cloudshell" }}border-copper-500 text-copper-400{{ else }}border-transparent text-paper-200 hover:text-paper-50{{ end }}">{{ index .labels "set.cloudshell" }}</a>
+  <a href="/settings?tab=policy" role="tab" aria-selected="{{ if eq $tab "policy" }}true{{ else }}false{{ end }}" class="whitespace-nowrap border-b-2 px-3 py-2 {{ if eq $tab "policy" }}border-copper-500 text-copper-400{{ else }}border-transparent text-paper-200 hover:text-paper-50{{ end }}">{{ index .labels "set.policy" }}</a>
+</nav>
+<section id="settings-tab-password"{{ if ne $tab "password" }} hidden{{ end }} role="tabpanel">
+  <h2 class="mt-8 font-display text-4xl">{{ index .labels "set.password_title" }}</h2>
+  <form action="/settings/password" method="post" class="mt-6 max-w-md space-y-3" data-amarra-drive="true">
+    {{ csrfField .CSRFToken }}
+    <div class="relative">
+      <input type="password" name="current_password" autocomplete="current-password" placeholder="{{ index .labels "set.current_password" }}" class="block w-full border border-paper-200/20 bg-ink-800 p-2.5 text-sm text-paper-50" />
+      <.password_toggle />
+      {{ if .Errors }}{{ with index .Errors "current_password" }}<p class="mt-1 text-xs text-copper-400">{{ . }}</p>{{ end }}{{ end }}
+    </div>
+    <div class="relative">
+      <input type="password" name="password" autocomplete="new-password" placeholder="{{ index .labels "set.new_password" }}" class="block w-full border border-paper-200/20 bg-ink-800 p-2.5 text-sm text-paper-50" />
+      <.password_toggle />
+      {{ if .Errors }}{{ with index .Errors "password" }}<p class="mt-1 text-xs text-copper-400">{{ . }}</p>{{ end }}{{ end }}
+    </div>
+    <div class="relative">
+      <input type="password" name="password_confirmation" autocomplete="new-password" placeholder="{{ index .labels "auth.password_confirmation_label" }}" class="block w-full border border-paper-200/20 bg-ink-800 p-2.5 text-sm text-paper-50" />
+      <.password_toggle />
+      {{ if .Errors }}{{ with index .Errors "password_confirmation" }}<p class="mt-1 text-xs text-copper-400">{{ . }}</p>{{ end }}{{ end }}
+    </div>
+    <button type="submit" class="bg-copper-500 px-4 py-2 text-sm text-ink-950">{{ index .labels "set.password_submit" }}</button>
+  </form>
+</section>
+<section id="settings-tab-sync"{{ if ne $tab "sync" }} hidden{{ end }} role="tabpanel">
+  <h2 class="mt-8 font-display text-4xl">{{ index .labels "set.title" }}</h2>
+  <p class="mt-3 max-w-2xl text-sm leading-relaxed text-paper-200">{{ index .labels "set.lead" }}</p>
+  <form action="/sync" method="post" data-amarra-drive="true">
+    {{ csrfField .CSRFToken }}
+    <button type="submit" class="mt-6 border border-copper-500 px-4 py-2 font-mono text-xs uppercase tracking-widest text-copper-400">{{ index .labels "set.sync" }}</button>
+  </form>
+</section>
+<section id="settings-tab-cloudshell"{{ if ne $tab "cloudshell" }} hidden{{ end }} role="tabpanel">
+  <h2 class="mt-8 font-display text-4xl">{{ index .labels "set.cloudshell" }}</h2>
+  {{ if .cloudShell }}
+  <pre class="mt-3 overflow-x-auto whitespace-pre-wrap break-all border border-ink-700 bg-ink-900 p-4 font-mono text-[11px] text-paper-200" amarra-hook="clipboard" data-amarra-copy="{{ .cloudShell }}">{{ .cloudShell }}</pre>
+  {{ end }}
+</section>
+<section id="settings-tab-policy"{{ if ne $tab "policy" }} hidden{{ end }} role="tabpanel">
+  <h2 class="mt-8 font-display text-4xl">{{ index .labels "set.policy" }}</h2>
+  <pre class="mt-3 overflow-x-auto border border-ink-700 bg-ink-900 p-4 font-mono text-[11px] text-paper-200">{{ .policy }}</pre>
+</section>
 {{ end }}

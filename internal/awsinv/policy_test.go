@@ -57,6 +57,12 @@ func TestCloudShellCommand_handlesAccountRoot(t *testing.T) {
 	if !strings.Contains(cmd, "create-access-key") {
 		t.Fatal("root path should emit access keys for Cifra")
 	}
+	if !strings.Contains(cmd, "list-access-keys") {
+		t.Fatal("root path must list existing keys when create-access-key hits the 2-key quota")
+	}
+	if !strings.Contains(cmd, "delete-access-key") {
+		t.Fatal("root path must show how to free a key slot")
+	}
 	if !strings.Contains(cmd, "Cannot attach FinOps policy") {
 		t.Fatal("unknown ARNs need a recovery hint, not a bare 'ARN not supported'")
 	}

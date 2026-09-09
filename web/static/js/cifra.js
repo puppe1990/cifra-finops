@@ -1,4 +1,24 @@
 (function () {
+  const NAV_ON = ["bg-copper-500", "text-ink-950"];
+  const NAV_OFF = ["text-paper-200", "hover:bg-ink-800"];
+
+  function syncSidebarNav() {
+    const nav = document.querySelector("aside nav");
+    if (!nav) return;
+    const path = location.pathname;
+    nav.querySelectorAll("a[href]").forEach((a) => {
+      const on = a.pathname === path;
+      NAV_ON.forEach((c) => a.classList.toggle(c, on));
+      NAV_OFF.forEach((c) => a.classList.toggle(c, !on));
+      if (on) a.setAttribute("aria-current", "page");
+      else a.removeAttribute("aria-current");
+    });
+    const current = nav.querySelector("a[aria-current='page']");
+    if (current && typeof current.scrollIntoView === "function") {
+      current.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+    }
+  }
+
   function boot() {
     const hook = window.amarra && window.amarra.hook;
     if (!hook || typeof hook.register !== "function") return;
@@ -52,9 +72,16 @@
     hook.scan(document);
   }
 
+  document.addEventListener("amarra:morphed", syncSidebarNav);
+  window.addEventListener("popstate", syncSidebarNav);
+
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", boot);
+    document.addEventListener("DOMContentLoaded", () => {
+      boot();
+      syncSidebarNav();
+    });
   } else {
     boot();
+    syncSidebarNav();
   }
 })();

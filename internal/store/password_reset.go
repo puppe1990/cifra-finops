@@ -38,6 +38,21 @@ func (s *SQLiteStore) FindPasswordResetUserID(token string) (int64, bool) {
 	return userID, true
 }
 
+func (s *SQLiteStore) UpdateUserPassword(userID int64, passwordHash string) error {
+	res, err := s.db.Exec("UPDATE users SET password_hash = ? WHERE id = ?", passwordHash, userID)
+	if err != nil {
+		return fmt.Errorf("update password: %w", err)
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("update password rows: %w", err)
+	}
+	if n == 0 {
+		return fmt.Errorf("update password: user %d not found", userID)
+	}
+	return nil
+}
+
 func (s *SQLiteStore) ResetPasswordWithToken(token, passwordHash string) error {
 	userID, ok := s.FindPasswordResetUserID(token)
 	if !ok {

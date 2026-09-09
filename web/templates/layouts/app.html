@@ -40,12 +40,12 @@
 <aside class="flex w-full shrink-0 flex-col border-b border-ink-700 bg-ink-900 md:sticky md:top-0 md:h-screen md:w-64 md:self-start md:overflow-y-auto md:border-b-0 md:border-r">
   <div class="flex items-end justify-between border-b border-ink-700 px-5 py-4 md:block md:px-5 md:py-6">
     <a href="/dashboard" class="block" data-amarra-drive="true">
-      <p class="font-mono text-[10px] uppercase tracking-[0.28em] text-copper-400">FinOps AWS</p>
+      <p class="font-mono text-[10px] uppercase tracking-[0.28em] text-copper-400">{{ index .labels "brand.eyebrow" }}</p>
       <h1 class="mt-1 font-display text-3xl leading-none text-paper-50">{{ if .Site }}{{ .Site.AppName }}{{ else }}Cifra{{ end }}</h1>
     </a>
     {{ if .tenant }}<p class="mt-3 hidden font-mono text-xs text-paper-200 md:block">{{ .tenant.name }}</p>{{ end }}
   </div>
-  <nav class="flex gap-1 overflow-x-auto px-3 py-3 text-sm md:flex-1 md:flex-col md:space-y-0.5 md:overflow-visible md:py-5">
+  <nav class="shell-nav flex gap-1 overflow-x-auto py-3 pl-3 pr-10 font-mono text-[11px] uppercase tracking-[0.16em] md:flex-1 md:flex-col md:gap-0.5 md:overflow-visible md:px-3 md:py-5 md:font-sans md:text-sm md:normal-case md:tracking-wide">
     {{ $active := .ActiveNav }}
     <a href="/dashboard" data-amarra-drive="true" class="whitespace-nowrap rounded-sm px-3 py-2 tracking-wide {{ if eq $active "dashboard" }}bg-copper-500 text-ink-950{{ else }}text-paper-200 hover:bg-ink-800{{ end }}">{{ index .labels "nav.ledger" }}</a>
     <a href="/compare" data-amarra-drive="true" class="whitespace-nowrap rounded-sm px-3 py-2 tracking-wide {{ if eq $active "compare" }}bg-copper-500 text-ink-950{{ else }}text-paper-200 hover:bg-ink-800{{ end }}">{{ index .labels "nav.compare" }}</a>
@@ -83,12 +83,12 @@
 
 {{ define "locale_toggle" }}
 <div class="inline-flex overflow-hidden border border-ink-700" data-testid="locale-toggle">
-  <form action="/locale" method="post" data-amarra-drive="true">
+  <form action="/locale" method="post" data-amarra-skip>
     {{ csrfField .CSRFToken }}
     <input type="hidden" name="locale" value="en" />
     <button type="submit" class="px-2 py-1 font-mono text-[10px] uppercase tracking-widest {{ if eq .locale "en" }}bg-copper-500 text-ink-950{{ else }}text-paper-200{{ end }}" aria-pressed="{{ if eq .locale "en" }}true{{ else }}false{{ end }}">{{ index .labels "lang.en" }}</button>
   </form>
-  <form action="/locale" method="post" data-amarra-drive="true">
+  <form action="/locale" method="post" data-amarra-skip>
     {{ csrfField .CSRFToken }}
     <input type="hidden" name="locale" value="pt" />
     <button type="submit" class="px-2 py-1 font-mono text-[10px] uppercase tracking-widest {{ if eq .locale "pt" }}bg-copper-500 text-ink-950{{ else }}text-paper-200{{ end }}" aria-pressed="{{ if eq .locale "pt" }}true{{ else }}false{{ end }}">{{ index .labels "lang.pt" }}</button>

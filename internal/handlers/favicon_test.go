@@ -7,6 +7,47 @@ import (
 	"testing"
 )
 
+func TestAppHTML_doesNotHardcodeFinOpsAWS(t *testing.T) {
+	root := projectRoot(t)
+	for _, rel := range []string{
+		"web/templates/layouts/app.html",
+		"web/templates/layouts/public.html",
+	} {
+		html, err := os.ReadFile(filepath.Join(root, rel))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if bytes.Contains(html, []byte("FinOps AWS")) {
+			t.Errorf("%s still hardcodes FinOps AWS", rel)
+		}
+	}
+}
+
+func TestAppHTML_localeToggleSkipsDrive(t *testing.T) {
+	root := projectRoot(t)
+	html, err := os.ReadFile(filepath.Join(root, "web/templates/layouts/app.html"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bytes.Count(html, []byte(`action="/locale"`)) != 2 {
+		t.Fatal("expected EN and PT locale forms")
+	}
+	if bytes.Count(html, []byte(`action="/locale" method="post" data-amarra-skip`)) != 2 {
+		t.Fatal("locale forms must skip Drive so the selected language box (outside #amarra-main) re-renders")
+	}
+}
+
+func TestAppHTML_mobileNavHidesScrollbar(t *testing.T) {
+	root := projectRoot(t)
+	html, err := os.ReadFile(filepath.Join(root, "web/templates/layouts/app.html"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Contains(html, []byte(`shell-nav`)) {
+		t.Fatal("mobile nav missing shell-nav (hide scrollbar + edge fade)")
+	}
+}
+
 func TestAppHTML_linksFaviconSVG(t *testing.T) {
 	root := projectRoot(t)
 	html, err := os.ReadFile(filepath.Join(root, "web/templates/layouts/app.html"))

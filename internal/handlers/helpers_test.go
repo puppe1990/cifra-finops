@@ -48,6 +48,20 @@ func setupTestStore(t *testing.T) store.Store {
 	return s
 }
 
+func navLinkClass(body, href string) string {
+	needle := `href="` + href + `"`
+	i := strings.Index(body, needle)
+	if i < 0 {
+		return ""
+	}
+	start := strings.LastIndex(body[:i], "<a ")
+	end := strings.Index(body[i:], ">")
+	if start < 0 || end < 0 {
+		return ""
+	}
+	return body[start : i+end]
+}
+
 func assertPasswordEyeToggles(t *testing.T, body string, want int) {
 	t.Helper()
 	if n := strings.Count(body, `type="password"`); n != want {
