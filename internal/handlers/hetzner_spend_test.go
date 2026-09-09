@@ -74,7 +74,7 @@ func TestBuildTenantView_formatsHetznerAsEuro(t *testing.T) {
 	}}); err != nil {
 		t.Fatal(err)
 	}
-	view, err := buildTenantView(s, tid, appi18n.DefaultCatalog(), awsinv.LedgerMonth{IsCurrent: true, Period: time.Now().UTC()}, nil, false)
+	view, err := buildTenantView(s, tid, appi18n.DefaultCatalog(), awsinv.LedgerMonth{IsCurrent: true, Period: time.Now().UTC()}, nil, false, "")
 	if err != nil {
 		t.Fatal(err)
 	}

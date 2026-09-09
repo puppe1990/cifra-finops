@@ -67,6 +67,7 @@ func (h *DashboardHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		now = h.now()
 	}
 	lm := awsinv.ParseLedgerMonth(r.URL.Query().Get("month"), now)
+	cloud := parseLedgerCloud(r.URL.Query().Get("cloud"))
 	cat := requestCatalog(r, h.cfg.Locale)
 
 	if h.syncer != nil && lm.IsCurrent {
@@ -92,16 +93,19 @@ func (h *DashboardHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			overlay = nil
 		}
 	}
+	if cloud == finops.ProviderHetzner {
+		overlay = nil
+	}
 
 	for k, v := range shellProps(h.site, r, h.store, ws) {
 		props[k] = v
 	}
-	view, err := buildTenantView(h.store, ws.Tenant.ID, cat, lm, overlay, ceDenied)
+	view, err := buildTenantView(h.store, ws.Tenant.ID, cat, lm, overlay, ceDenied, cloud)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if lm.IsCurrent && h.syncer != nil {
+	if lm.IsCurrent && h.syncer != nil && cloud != finops.ProviderHetzner {
 		attachForecast(r.Context(), h.syncer, ws.Tenant.ID, now, cat, view.Summary)
 	}
 	props["summary"] = view.Summary
@@ -111,10 +115,13 @@ func (h *DashboardHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	props["budgets"] = view.Budgets
 	props["accounts"] = view.Accounts
 	props["lastSync"] = view.LastSync
+	props["cloudTabs"] = view.CloudTabs
 	props["month"] = lm.Query
 	props["monthLabel"] = ledgerMonthLabel(cat, lm)
 	props["prevMonth"] = lm.Prev
 	props["nextMonth"] = lm.Next
+	props["prevMonthHref"] = ledgerHref(cloud, lm.Prev)
+	props["nextMonthHref"] = ledgerHref(cloud, lm.Next)
 	props["isCurrent"] = lm.IsCurrent
 	writePage(w, r, h.views, h.cfg, "app", "dashboard", props, 0)
 }
@@ -127,9 +134,10 @@ type tenantView struct {
 	Budgets   []map[string]any
 	Accounts  []map[string]any
 	LastSync  map[string]any
+	CloudTabs []map[string]any
 }
 
-func buildTenantView(s store.Store, tenantID int64, cat *i18n.Catalog, lm awsinv.LedgerMonth, overlay []models.CostLine, ceDenied bool) (tenantView, error) {
+func buildTenantView(s store.Store, tenantID int64, cat *i18n.Catalog, lm awsinv.LedgerMonth, overlay []models.CostLine, ceDenied bool, cloud string) (tenantView, error) {
 	resources, err := s.ListResourcesForTenant(tenantID)
 	if err != nil {
 		return tenantView{}, err
@@ -145,6 +153,18 @@ func buildTenantView(s store.Store, tenantID int64, cat *i18n.Catalog, lm awsinv
 	budgets, err := s.ListBudgets(tenantID)
 	if err != nil {
 		return tenantView{}, err
+	}
+
+	tabMonth := lm.Query
+	if lm.IsCurrent {
+		tabMonth = ""
+	}
+	tabs := ledgerCloudTabs(accounts, cloud, tabMonth, cat)
+	if cloud != "" {
+		accounts = filterAccountsByCloud(accounts, cloud)
+		ids := accountIDSet(accounts)
+		resources = filterResourcesByAccounts(resources, ids)
+		findings = filterFindingsByAccounts(findings, ids)
 	}
 
 	monthly, costLines, source, err := monthSpend(s, accounts, resources, cat, lm, overlay)
@@ -194,6 +214,7 @@ func buildTenantView(s store.Store, tenantID int64, cat *i18n.Catalog, lm awsinv
 		Budgets:   budgetProps(budgets, usd),
 		Accounts:  accountProps(accounts),
 		LastSync:  lastSyncProps(s, accounts),
+		CloudTabs: tabs,
 	}, nil
 }
 

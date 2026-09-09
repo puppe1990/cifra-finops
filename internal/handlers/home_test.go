@@ -78,3 +78,27 @@ func TestHomeHandler_ContentType(t *testing.T) {
 		t.Errorf("Content-Type = %q, want text/html", ct)
 	}
 }
+
+func TestHomeHandler_OpenGraphPreview(t *testing.T) {
+	h := newHomeHandler(t)
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	rr := httptest.NewRecorder()
+	h.ServeHTTP(rr, req)
+
+	body := rr.Body.String()
+	wants := []string{
+		`property="og:image" content="https://cais.example.com/static/og.png"`,
+		`property="og:image:width" content="1200"`,
+		`property="og:image:height" content="630"`,
+		`name="twitter:card" content="summary_large_image"`,
+		`property="og:site_name" content="Cifra"`,
+		`property="og:title" content="Cifra · multi cloud FinOps"`,
+		`name="twitter:image" content="https://cais.example.com/static/og.png"`,
+	}
+	for _, want := range wants {
+		if !strings.Contains(body, want) {
+			t.Errorf("missing %q", want)
+		}
+	}
+}

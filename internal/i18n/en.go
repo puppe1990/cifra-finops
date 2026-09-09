@@ -85,6 +85,9 @@ var enMessages = map[string]string{
 	"home.eyebrow_seeded": "Multi-tenant · account %s already linked",
 	"home.eyebrow_empty":  "Multi-tenant · link an AWS account in the workspace",
 
+	"dash.cloud_all":         "All",
+	"dash.cloud_aws":         "AWS",
+	"dash.cloud_hetzner":     "Hetzner",
 	"dash.month":             "Current month",
 	"dash.sync":              "Sync",
 	"dash.runrate":           "Monthly run-rate",

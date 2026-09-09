@@ -2,12 +2,19 @@
 <div class="flex flex-wrap items-end justify-between gap-4">
   <div>
     <div class="inline-flex items-center gap-4 border border-ink-700 px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.3em] text-copper-400">
-      {{ if .prevMonth }}<a href="/dashboard?month={{ .prevMonth }}" data-amarra-drive="true" class="hover:text-paper-50" aria-label="{{ .prevMonth }}">‹</a>{{ else }}<span class="opacity-25">‹</span>{{ end }}
+      {{ if .prevMonth }}<a href="{{ .prevMonthHref }}" data-amarra-drive="true" class="hover:text-paper-50" aria-label="{{ .prevMonth }}">‹</a>{{ else }}<span class="opacity-25">‹</span>{{ end }}
       <span data-month="{{ .month }}">{{ if .monthLabel }}{{ .monthLabel }}{{ else }}{{ index .labels "dash.month" }}{{ end }}</span>
-      {{ if .nextMonth }}<a href="/dashboard?month={{ .nextMonth }}" data-amarra-drive="true" class="hover:text-paper-50" aria-label="{{ .nextMonth }}">›</a>{{ else }}<span class="opacity-25">›</span>{{ end }}
+      {{ if .nextMonth }}<a href="{{ .nextMonthHref }}" data-amarra-drive="true" class="hover:text-paper-50" aria-label="{{ .nextMonth }}">›</a>{{ else }}<span class="opacity-25">›</span>{{ end }}
     </div>
     {{ if .accounts }}{{ with index .accounts 0 }}<p class="mt-2 font-mono text-xs text-paper-200">{{ .awsAccountId }}</p>{{ end }}{{ end }}
     <h2 class="mt-4 font-display text-4xl">{{ index .labels "dashboard.title" }}</h2>
+    {{ if and .cloudTabs (gt (len .cloudTabs) 1) }}
+    <nav class="mt-6 flex gap-1 overflow-x-auto font-mono text-[11px] uppercase tracking-[0.16em]" role="tablist">
+      {{ range .cloudTabs }}
+      <a href="{{ .href }}" data-amarra-drive="true" role="tab" aria-selected="{{ if .active }}true{{ else }}false{{ end }}" class="whitespace-nowrap border-b-2 px-3 py-2 {{ if .active }}border-copper-500 text-copper-400{{ else }}border-transparent text-paper-200 hover:text-paper-50{{ end }}">{{ .label }}</a>
+      {{ end }}
+    </nav>
+    {{ end }}
   </div>
   <form action="/sync" method="post" data-amarra-drive="true">
     {{ csrfField .CSRFToken }}

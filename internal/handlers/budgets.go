@@ -32,7 +32,7 @@ func (h *BudgetsHandler) List(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
-	view, err := buildTenantView(h.store, ws.Tenant.ID, requestCatalog(r, h.cfg.Locale), awsinv.LedgerMonth{IsCurrent: true}, nil, false)
+	view, err := buildTenantView(h.store, ws.Tenant.ID, requestCatalog(r, h.cfg.Locale), awsinv.LedgerMonth{IsCurrent: true}, nil, false, "")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
