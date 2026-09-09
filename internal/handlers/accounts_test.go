@@ -36,7 +36,7 @@ func TestAccountsHandler_List_secretKeyHasEyeToggle(t *testing.T) {
 	if rr.Code == http.StatusSeeOther {
 		t.Fatal("redirected; workspace missing for list")
 	}
-	assertPasswordEyeToggles(t, rr.Body.String(), 1)
+	assertPasswordEyeToggles(t, rr.Body.String(), 2)
 }
 
 func TestAccountsHandler_Create_updatesExistingToAccessKeys(t *testing.T) {

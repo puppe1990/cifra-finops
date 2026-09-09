@@ -151,8 +151,9 @@ func buildTenantView(s store.Store, tenantID int64, cat *i18n.Catalog, lm awsinv
 	if err != nil {
 		return tenantView{}, err
 	}
+	usd, eur := splitCurrency(costLines)
 	mtd := monthly
-	if lm.IsCurrent && source != finops.SourceCE {
+	if lm.IsCurrent && source != finops.SourceCE && source != finops.SourceHetzner {
 		mtd = costest.MonthToDateCents(monthly, time.Now())
 	}
 
@@ -178,7 +179,8 @@ func buildTenantView(s store.Store, tenantID int64, cat *i18n.Catalog, lm awsinv
 	return tenantView{
 		Summary: map[string]any{
 			"monthlyCents":  monthly,
-			"monthlyUSD":    formatUSD(monthly),
+			"monthlyUSD":    usdLabel(usd, eur),
+			"monthlyEUR":    eurLabel(eur),
 			"mtdCents":      mtd,
 			"mtdUSD":        formatUSD(mtd),
 			"source":        source,
@@ -189,17 +191,31 @@ func buildTenantView(s store.Store, tenantID int64, cat *i18n.Catalog, lm awsinv
 		Services:  serviceProps(costLines),
 		Resources: resourceProps(resources, cat),
 		Findings:  findingProps(shownFindings, cat),
-		Budgets:   budgetProps(budgets, monthly),
+		Budgets:   budgetProps(budgets, usd),
 		Accounts:  accountProps(accounts),
 		LastSync:  lastSyncProps(s, accounts),
 	}, nil
 }
 
 func monthSpend(s store.Store, accounts []models.CloudAccount, resources []models.CloudResource, cat *i18n.Catalog, lm awsinv.LedgerMonth, overlay []models.CostLine) (int64, []models.CostLine, string, error) {
-	if !lm.IsCurrent || len(overlay) > 0 {
+	if !lm.IsCurrent {
 		monthly, lines, source := sumCostLines(overlay)
 		return monthly, lines, source, nil
 	}
+	monthly, lines, source, err := storedSpend(s, accounts, resources, cat)
+	if err != nil {
+		return 0, nil, "", err
+	}
+	if len(overlay) == 0 {
+		return monthly, lines, source, nil
+	}
+	merged := append([]models.CostLine{}, overlay...)
+	merged = append(merged, hetznerLines(lines)...)
+	monthly, lines, source = sumCostLines(merged)
+	return monthly, lines, source, nil
+}
+
+func storedSpend(s store.Store, accounts []models.CloudAccount, resources []models.CloudResource, cat *i18n.Catalog) (int64, []models.CostLine, string, error) {
 	var monthly int64
 	var lines []models.CostLine
 	source := finops.SourceEstimate
@@ -214,6 +230,9 @@ func monthSpend(s store.Store, accounts []models.CloudAccount, resources []model
 		if src == finops.SourceCE {
 			source = finops.SourceCE
 		}
+		if src == finops.SourceHetzner && source != finops.SourceCE {
+			source = finops.SourceHetzner
+		}
 	}
 	if monthly == 0 {
 		for _, r := range resources {
@@ -224,6 +243,41 @@ func monthSpend(s store.Store, accounts []models.CloudAccount, resources []model
 		}
 	}
 	return monthly, lines, source, nil
+}
+
+func hetznerLines(lines []models.CostLine) []models.CostLine {
+	var out []models.CostLine
+	for _, line := range lines {
+		if line.Source == finops.SourceHetzner {
+			out = append(out, line)
+		}
+	}
+	return out
+}
+
+func splitCurrency(lines []models.CostLine) (usd, eur int64) {
+	for _, line := range lines {
+		if line.Source == finops.SourceHetzner {
+			eur += line.MonthlyCents
+			continue
+		}
+		usd += line.MonthlyCents
+	}
+	return usd, eur
+}
+
+func usdLabel(usd, eur int64) string {
+	if usd == 0 && eur > 0 {
+		return ""
+	}
+	return formatUSD(usd)
+}
+
+func eurLabel(eur int64) string {
+	if eur <= 0 {
+		return ""
+	}
+	return formatEUR(eur)
 }
 
 func sumCostLines(costLines []models.CostLine) (monthly int64, lines []models.CostLine, source string) {
@@ -284,7 +338,7 @@ func resourceProps(resources []models.CloudResource, cat *i18n.Catalog) []map[st
 			"name":   r.Name,
 			"region": r.Region,
 			"state":  r.State,
-			"usd":    formatUSD(r.MonthlyCents),
+			"usd":    formatCost(r.MonthlyCents, r.Source),
 			"cents":  r.MonthlyCents,
 			"source": r.Source,
 		})
@@ -324,6 +378,7 @@ func accountProps(accounts []models.CloudAccount) []map[string]any {
 	for _, a := range accounts {
 		out = append(out, map[string]any{
 			"id":           a.ID,
+			"provider":     a.Provider,
 			"awsAccountId": a.AWSAccountID,
 			"alias":        a.Alias,
 			"region":       a.Region,

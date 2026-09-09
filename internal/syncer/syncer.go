@@ -3,11 +3,11 @@ package syncer
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/puppe1990/cifra-finops/internal/awsinv"
 	"github.com/puppe1990/cifra-finops/internal/finops"
+	"github.com/puppe1990/cifra-finops/internal/hetznerinv"
 	"github.com/puppe1990/cifra-finops/internal/models"
 	"github.com/puppe1990/cifra-finops/internal/store"
 )
@@ -15,6 +15,7 @@ import (
 type Syncer struct {
 	store     store.Store
 	collector awsinv.Collector
+	hetzner   hetznerinv.Collector
 	decrypt   func(cipher string) (string, error)
 }
 
@@ -24,6 +25,11 @@ func New(s store.Store, collector awsinv.Collector) *Syncer {
 
 func (s *Syncer) WithDecrypt(fn func(string) (string, error)) *Syncer {
 	s.decrypt = fn
+	return s
+}
+
+func (s *Syncer) WithHetzner(c hetznerinv.Collector) *Syncer {
+	s.hetzner = c
 	return s
 }
 
@@ -37,30 +43,18 @@ func (s *Syncer) SyncAccount(ctx context.Context, accountID int64) (run storeRun
 		return storeRun{}, err
 	}
 
+	if acc.Provider == finops.ProviderHetzner {
+		return s.finishHetzner(ctx, acc, runID)
+	}
 	creds, err := s.credsFor(acc)
 	if err != nil {
-		_ = s.store.FinishSyncRun(runID, finops.SyncFailed, "", "", err.Error())
-		return storeRun{Status: finops.SyncFailed, Error: err.Error()}, err
+		return s.failRun(runID, err)
 	}
 	inv, err := s.collector.Collect(ctx, creds)
 	if err != nil {
-		_ = s.store.FinishSyncRun(runID, finops.SyncFailed, "", "", err.Error())
-		return storeRun{Status: finops.SyncFailed, Error: err.Error()}, err
+		return s.failRun(runID, err)
 	}
-	if err := s.store.ReplaceResources(accountID, inv.Resources); err != nil {
-		return storeRun{}, err
-	}
-	if err := s.store.ReplaceCostLines(accountID, inv.Lines); err != nil {
-		return storeRun{}, err
-	}
-	if err := s.store.ReplaceFindings(accountID, inv.Findings); err != nil {
-		return storeRun{}, err
-	}
-	warning := strings.Join(inv.Warnings, "; ")
-	if err := s.store.FinishSyncRun(runID, finops.SyncOK, inv.Source, warning, ""); err != nil {
-		return storeRun{}, err
-	}
-	return storeRun{ID: runID, Status: finops.SyncOK, Source: inv.Source, Warning: warning}, nil
+	return s.persistInventory(accountID, runID, inv.Source, inv.Resources, inv.Lines, inv.Findings, inv.Warnings)
 }
 
 func (s *Syncer) credsFor(acc models.CloudAccount) (awsinv.Credentials, error) {
@@ -91,6 +85,9 @@ func (s *Syncer) CostForMonth(ctx context.Context, tenantID int64, period time.T
 	}
 	var all []models.CostLine
 	for _, acc := range accounts {
+		if !isAWSAccount(acc) {
+			continue
+		}
 		creds, err := s.credsFor(acc)
 		if err != nil {
 			return nil, fmt.Errorf("ce %s: %w", acc.AWSAccountID, err)
@@ -115,6 +112,9 @@ func (s *Syncer) CostAnomalies(ctx context.Context, tenantID int64, from, to tim
 	}
 	var all []awsinv.CostAnomaly
 	for _, acc := range accounts {
+		if !isAWSAccount(acc) {
+			continue
+		}
 		creds, err := s.credsFor(acc)
 		if err != nil {
 			return nil, fmt.Errorf("anomalies %s: %w", acc.AWSAccountID, err)
@@ -139,6 +139,9 @@ func (s *Syncer) CostByMonth(ctx context.Context, tenantID int64, from, to time.
 	}
 	var all []models.CostLine
 	for _, acc := range accounts {
+		if !isAWSAccount(acc) {
+			continue
+		}
 		creds, err := s.credsFor(acc)
 		if err != nil {
 			return nil, fmt.Errorf("ce %s: %w", acc.AWSAccountID, err)
@@ -163,6 +166,9 @@ func (s *Syncer) ForecastForMonth(ctx context.Context, tenantID int64, period ti
 	}
 	var total int64
 	for _, acc := range accounts {
+		if !isAWSAccount(acc) {
+			continue
+		}
 		creds, err := s.credsFor(acc)
 		if err != nil {
 			return 0, fmt.Errorf("forecast %s: %w", acc.AWSAccountID, err)

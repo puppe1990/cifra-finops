@@ -5,7 +5,7 @@
   {{ range .accounts }}
   <li class="flex flex-wrap items-center justify-between gap-2 bg-ink-900 px-4 py-3">
     <div>
-      <p class="font-mono text-lg text-copper-400">{{ .awsAccountId }}</p>
+      <p class="font-mono text-lg text-copper-400">{{ if .provider }}{{ .provider }} · {{ end }}{{ .awsAccountId }}</p>
       <p class="text-sm text-paper-200">{{ .alias }} · {{ .region }} · {{ .authMode }}</p>
     </div>
   </li>
@@ -29,6 +29,18 @@
       <input type="password" name="secret_access_key" placeholder="AWS_SECRET_ACCESS_KEY" class="w-full border border-paper-200/20 bg-ink-800 p-2.5 font-mono text-sm" />
       <.password_toggle />
     </div>
+  </div>
+  <button type="submit" class="bg-copper-500 px-4 py-2 text-sm text-ink-950">{{ index .labels "acc.submit" }}</button>
+</form>
+<form action="/accounts" method="post" class="mt-10 max-w-xl space-y-3 border border-paper-200/15 bg-ink-900 p-5" data-amarra-drive="true">
+  {{ csrfField .CSRFToken }}
+  <input type="hidden" name="provider" value="hetzner" />
+  <h3 class="font-display text-2xl">{{ index .labels "acc.link_hetzner" }}</h3>
+  <p class="text-sm text-paper-200">{{ index .labels "acc.hetzner_help" }}</p>
+  <input name="alias" placeholder="{{ index .labels "acc.ph_alias" }}" class="w-full border border-paper-200/20 bg-ink-800 p-2.5 text-sm" />
+  <div class="relative">
+    <input type="password" name="api_token" placeholder="{{ index .labels "acc.ph_token" }}" class="w-full border border-paper-200/20 bg-ink-800 p-2.5 font-mono text-sm" />
+    <.password_toggle />
   </div>
   <button type="submit" class="bg-copper-500 px-4 py-2 text-sm text-ink-950">{{ index .labels "acc.submit" }}</button>
 </form>

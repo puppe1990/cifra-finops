@@ -5,6 +5,7 @@ import "time"
 type CloudAccount struct {
 	ID           int64
 	TenantID     int64
+	Provider     string
 	AWSAccountID string
 	Alias        string
 	Region       string
