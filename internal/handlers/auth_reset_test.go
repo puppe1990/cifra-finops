@@ -33,6 +33,17 @@ func newAuthHandlerForReset(t *testing.T, s store.Store, notify passwordreset.No
 	return h
 }
 
+func TestAuth_ResetPassword_passwordFieldsHaveEyeToggle(t *testing.T) {
+	s := setupTestStore(t)
+	h := newAuthHandlerForReset(t, s, &captureNotifier{})
+
+	req := httptest.NewRequest(http.MethodGet, "/reset-password", nil)
+	rr := httptest.NewRecorder()
+	h.ResetPassword(rr, req)
+
+	assertPasswordEyeToggles(t, rr.Body.String(), 2)
+}
+
 func TestAuth_ForgotPasswordPost_unknownEmail_showsSameMessage(t *testing.T) {
 	s := setupTestStore(t)
 	notify := &captureNotifier{}

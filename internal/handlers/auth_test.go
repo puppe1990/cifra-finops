@@ -26,6 +26,29 @@ func newAuthHandler(t *testing.T) (*AuthHandler, store.Store) {
 	return h, s
 }
 
+func TestAuth_Login_blankFieldsAndPasswordEye(t *testing.T) {
+	h, _ := newAuthHandler(t)
+
+	req := httptest.NewRequest(http.MethodGet, "/login", nil)
+	rr := httptest.NewRecorder()
+	h.Login(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200", rr.Code)
+	}
+	body := rr.Body.String()
+	if strings.Contains(body, "Demo:") {
+		t.Error("demo hint still on login")
+	}
+	if strings.Contains(body, `value="demo@example.com"`) {
+		t.Error("email prefilled")
+	}
+	if strings.Contains(body, `value="password"`) {
+		t.Error("password prefilled")
+	}
+	assertPasswordEyeToggles(t, body, 1)
+}
+
 func TestAuth_Login_redirectsWhenAuthenticated(t *testing.T) {
 	h, s := newAuthHandler(t)
 

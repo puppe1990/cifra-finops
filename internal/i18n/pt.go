@@ -5,7 +5,10 @@ var ptMessages = map[string]string{
 	"auth.welcome":                     "Bem-vindo!",
 	"auth.login_title":                 "Entrar",
 	"auth.login_submit":                "Entrar",
+	"auth.email_label":                 "Email",
 	"auth.password_label":              "Senha",
+	"auth.show_password":               "Mostrar senha",
+	"auth.hide_password":               "Ocultar senha",
 	"auth.password_confirmation_label": "Confirmar senha",
 	"auth.logout":                      "Sair",
 	"auth.forgot_password":             "Esqueceu a senha?",
@@ -75,7 +78,6 @@ var ptMessages = map[string]string{
 
 	"auth.tagline":    "O livro-caixa da AWS",
 	"auth.login_book": "Entrar no livro",
-	"auth.demo_hint":  "Demo: demo@example.com / password",
 
 	"home.open_ledger":    "Abrir o livro",
 	"home.new_workspace":  "Novo workspace",

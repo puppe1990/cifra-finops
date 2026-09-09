@@ -24,6 +24,19 @@ func newAuthHandlerForSignup(t *testing.T) (*AuthHandler, store.Store) {
 	return h, s
 }
 
+func TestAuth_SignUp_passwordFieldsHaveEyeToggle(t *testing.T) {
+	h, _ := newAuthHandlerForSignup(t)
+
+	req := httptest.NewRequest(http.MethodGet, "/signup", nil)
+	rr := httptest.NewRecorder()
+	h.SignUp(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200", rr.Code)
+	}
+	assertPasswordEyeToggles(t, rr.Body.String(), 2)
+}
+
 func TestAuth_SignUpPost_createsUserAndRedirects(t *testing.T) {
 	h, s := newAuthHandlerForSignup(t)
 

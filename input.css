@@ -292,6 +292,18 @@ html.light {
     padding-right: 2.5rem;
   }
 
+  [amarra-hook="password"] .icon-eye-off {
+    display: none;
+  }
+
+  [amarra-hook="password"][aria-pressed="true"] .icon-eye {
+    display: none;
+  }
+
+  [amarra-hook="password"][aria-pressed="true"] .icon-eye-off {
+    display: block;
+  }
+
   .cais-select-search {
     position: relative;
   }
