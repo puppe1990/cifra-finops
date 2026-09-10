@@ -10,7 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.58.6
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.107.2
 	github.com/aws/aws-sdk-go-v2/service/sts v1.45.6
-	github.com/puppe1990/amarra-cais v0.0.4-0.20260905171717-66d8111520a1
+	github.com/puppe1990/amarra-cais v0.2.2
 	modernc.org/sqlite v1.53.0
 )
 
