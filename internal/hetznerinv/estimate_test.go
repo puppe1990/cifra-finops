@@ -85,6 +85,63 @@ func TestEstimate_trafficOverage(t *testing.T) {
 	}
 }
 
+func TestEstimate_stampsPricingCurrency(t *testing.T) {
+	inv := Estimate(Snapshot{
+		Pricing: Pricing{
+			Currency: "USD",
+			ServerTypes: []TypePrice{{
+				Name:       "cx33",
+				ByLocation: map[string]LocationPrice{"fsn1": {MonthlyCents: 999}},
+			}},
+		},
+		Servers: []Server{{
+			ID: 1, Name: "gestaobem-cx33", Type: "cx33", Location: "fsn1", Status: "running",
+		}},
+	})
+	if inv.Currency != "USD" {
+		t.Fatalf("inventory currency = %q", inv.Currency)
+	}
+	if inv.Resources[0].Currency != "USD" {
+		t.Fatalf("resource currency = %#v", inv.Resources[0])
+	}
+	if inv.Lines[0].Currency != "USD" {
+		t.Fatalf("line currency = %#v", inv.Lines[0])
+	}
+}
+
+func TestEstimate_ipv6PrimaryIPIsFree(t *testing.T) {
+	inv := Estimate(Snapshot{
+		Pricing: Pricing{
+			Currency:    "USD",
+			PrimaryIPv4: map[string]LocationPrice{"fsn1": {MonthlyCents: 60}},
+		},
+		PrimaryIPs: []Address{
+			{ID: 1, Name: "v4", Type: "ipv4", Location: "fsn1", Assigned: true},
+			{ID: 2, Name: "v6", Type: "ipv6", Location: "fsn1", Assigned: true},
+		},
+	})
+	if !hasService(inv.Lines, "Primary IP", 60) {
+		t.Fatalf("ipv4 line missing: %#v", inv.Lines)
+	}
+	for _, line := range inv.Lines {
+		if line.UsageType == "ipv6" && line.MonthlyCents != 0 {
+			t.Fatalf("ipv6 billed: %#v", line)
+		}
+	}
+	var v4, v6 bool
+	for _, r := range inv.Resources {
+		switch r.Name {
+		case "v4":
+			v4 = r.MonthlyCents == 60
+		case "v6":
+			v6 = r.MonthlyCents == 0
+		}
+	}
+	if !v4 || !v6 {
+		t.Fatalf("resources = %#v", inv.Resources)
+	}
+}
+
 func TestEstimate_unattachedPrimaryIP(t *testing.T) {
 	inv := Estimate(Snapshot{
 		Pricing: Pricing{

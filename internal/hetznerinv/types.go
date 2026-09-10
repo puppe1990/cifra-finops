@@ -13,6 +13,7 @@ type Snapshot struct {
 }
 
 type Pricing struct {
+	Currency          string
 	ServerTypes       []TypePrice
 	LoadBalancerTypes []TypePrice
 	VolumePerGB       float64
@@ -78,6 +79,7 @@ type SnapshotImage struct {
 
 type Inventory struct {
 	Source    string
+	Currency  string
 	Resources []models.CloudResource
 	Lines     []models.CostLine
 	Findings  []models.Finding

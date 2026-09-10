@@ -8,9 +8,10 @@ import (
 
 func serviceProps(lines []models.CostLine) []map[string]any {
 	type bucket struct {
-		cents   int64
-		source  string
-		details map[string]int64
+		cents    int64
+		source   string
+		currency string
+		details  map[string]int64
 	}
 	byService := map[string]*bucket{}
 	var order []string
@@ -20,7 +21,7 @@ func serviceProps(lines []models.CostLine) []map[string]any {
 		}
 		b, ok := byService[line.Service]
 		if !ok {
-			b = &bucket{details: map[string]int64{}, source: line.Source}
+			b = &bucket{details: map[string]int64{}, source: line.Source, currency: line.Currency}
 			byService[line.Service] = b
 			order = append(order, line.Service)
 		}
@@ -38,15 +39,15 @@ func serviceProps(lines []models.CostLine) []map[string]any {
 	out := make([]map[string]any, 0, len(order))
 	for _, name := range order {
 		b := byService[name]
-		details := usageDetails(b.details, b.source)
+		details := usageDetails(b.details, b.source, b.currency)
 		out = append(out, map[string]any{
-			"name": name, "cents": b.cents, "usd": formatCost(b.cents, b.source), "details": details,
+			"name": name, "cents": b.cents, "usd": formatCost(b.cents, b.source, b.currency), "details": details,
 		})
 	}
 	return out
 }
 
-func usageDetails(sums map[string]int64, source string) []map[string]any {
+func usageDetails(sums map[string]int64, source, currency string) []map[string]any {
 	names := make([]string, 0, len(sums))
 	for n := range sums {
 		names = append(names, n)
@@ -60,7 +61,7 @@ func usageDetails(sums map[string]int64, source string) []map[string]any {
 	out := make([]map[string]any, 0, len(names))
 	for _, n := range names {
 		out = append(out, map[string]any{
-			"name": n, "cents": sums[n], "usd": formatCost(sums[n], source),
+			"name": n, "cents": sums[n], "usd": formatCost(sums[n], source, currency),
 		})
 	}
 	return out

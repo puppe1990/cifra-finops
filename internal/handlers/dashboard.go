@@ -258,7 +258,8 @@ func storedSpend(s store.Store, accounts []models.CloudAccount, resources []mode
 		for _, r := range resources {
 			monthly += r.MonthlyCents
 			lines = append(lines, models.CostLine{
-				Service: resourceKindLabel(r.Kind, cat), MonthlyCents: r.MonthlyCents, Source: r.Source,
+				Service: resourceKindLabel(r.Kind, cat), MonthlyCents: r.MonthlyCents,
+				Source: r.Source, Currency: r.Currency,
 			})
 		}
 	}
@@ -277,7 +278,7 @@ func hetznerLines(lines []models.CostLine) []models.CostLine {
 
 func splitCurrency(lines []models.CostLine) (usd, eur int64) {
 	for _, line := range lines {
-		if line.Source == finops.SourceHetzner {
+		if moneyCurrency(line.Source, line.Currency) == "EUR" {
 			eur += line.MonthlyCents
 			continue
 		}
@@ -398,7 +399,7 @@ func resourceProps(resources []models.CloudResource, cat *i18n.Catalog) []map[st
 			"name":   r.Name,
 			"region": r.Region,
 			"state":  r.State,
-			"usd":    formatCost(r.MonthlyCents, r.Source),
+			"usd":    formatCost(r.MonthlyCents, r.Source, r.Currency),
 			"cents":  r.MonthlyCents,
 			"source": r.Source,
 		})
