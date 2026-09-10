@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 type pricingPayload struct {
 	Pricing struct {
-		Volume struct {
+		Currency string `json:"currency"`
+		Volume   struct {
 			PricePerGBMonth priceAmount `json:"price_per_gb_month"`
 		} `json:"volume"`
 		Image struct {
@@ -60,6 +62,7 @@ func ParsePricing(raw []byte) (Pricing, error) {
 	}
 	src := payload.Pricing
 	out := Pricing{
+		Currency:      strings.ToUpper(strings.TrimSpace(src.Currency)),
 		VolumePerGB:   parseEuros(src.Volume.PricePerGBMonth.Net),
 		ImagePerGB:    parseEuros(src.Image.PricePerGBMonth.Net),
 		BackupPercent: parseEuros(src.ServerBackup.Percentage),

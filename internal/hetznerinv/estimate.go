@@ -13,7 +13,7 @@ const tiB = 1024 * 1024 * 1024 * 1024
 
 func Estimate(snap Snapshot) Inventory {
 	start, end := monthBounds(time.Now().UTC())
-	inv := Inventory{Source: finops.SourceHetzner}
+	inv := Inventory{Source: finops.SourceHetzner, Currency: snap.Pricing.Currency}
 
 	for _, srv := range snap.Servers {
 		cents := snap.Pricing.serverMonthly(srv.Type, srv.Location)
@@ -51,19 +51,25 @@ func Estimate(snap Snapshot) Inventory {
 	}
 
 	for _, ip := range snap.PrimaryIPs {
-		price := snap.Pricing.PrimaryIPv4[ip.Location]
-		cents := price.MonthlyCents
+		cents := int64(0)
+		if ip.Type == "ipv4" {
+			cents = snap.Pricing.PrimaryIPv4[ip.Location].MonthlyCents
+		}
 		state := "assigned"
 		if !ip.Assigned {
 			state = "unassigned"
-			inv.Findings = append(inv.Findings, models.Finding{
-				Kind:     finops.FindingUnattachedIP,
-				Severity: "warning",
-				Title:    ip.Name,
-			})
+			if cents > 0 {
+				inv.Findings = append(inv.Findings, models.Finding{
+					Kind:     finops.FindingUnattachedIP,
+					Severity: "warning",
+					Title:    ip.Name,
+				})
+			}
 		}
 		inv.Resources = append(inv.Resources, resource("hetzner_primary_ip", ip.Name, ip.Location, state, cents, ip.ID))
-		inv.Lines = append(inv.Lines, costLine("Primary IP", ip.Type, cents, start, end))
+		if cents > 0 {
+			inv.Lines = append(inv.Lines, costLine("Primary IP", ip.Type, cents, start, end))
+		}
 	}
 
 	for _, ip := range snap.FloatingIPs {
@@ -94,6 +100,16 @@ func Estimate(snap Snapshot) Inventory {
 		inv.Lines = append(inv.Lines, costLine("Snapshot", img.Name, cents, start, end))
 	}
 
+	return stampCurrency(inv)
+}
+
+func stampCurrency(inv Inventory) Inventory {
+	for i := range inv.Resources {
+		inv.Resources[i].Currency = inv.Currency
+	}
+	for i := range inv.Lines {
+		inv.Lines[i].Currency = inv.Currency
+	}
 	return inv
 }
 

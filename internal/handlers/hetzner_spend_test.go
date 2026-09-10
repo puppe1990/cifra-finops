@@ -92,6 +92,40 @@ func TestBuildTenantView_formatsHetznerAsEuro(t *testing.T) {
 	}
 }
 
+func TestBuildTenantView_formatsHetznerUSDFromLineCurrency(t *testing.T) {
+	s := setupTestStore(t)
+	tid, err := s.CreateTenant("Demo", "demo-usd")
+	if err != nil {
+		t.Fatal(err)
+	}
+	hzID, err := s.CreateCloudAccount(models.CloudAccount{
+		TenantID: tid, Provider: finops.ProviderHetzner, AWSAccountID: "hz:prod",
+		Alias: "prod", Region: "fsn1", AuthMode: finops.AuthModeAPIToken,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := s.ReplaceCostLines(hzID, []models.CostLine{{
+		Service: "Cloud Server", UsageType: "cx33", MonthlyCents: 999,
+		Source: finops.SourceHetzner, Currency: "USD",
+	}}); err != nil {
+		t.Fatal(err)
+	}
+	view, err := buildTenantView(s, tid, appi18n.DefaultCatalog(), awsinv.LedgerMonth{IsCurrent: true, Period: time.Now().UTC()}, nil, false, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if view.Summary["monthlyUSD"] != "US$ 9,99" {
+		t.Fatalf("monthlyUSD = %#v", view.Summary["monthlyUSD"])
+	}
+	if eur, _ := view.Summary["monthlyEUR"].(string); eur != "" {
+		t.Fatalf("monthlyEUR should be empty for USD Hetzner, got %q", eur)
+	}
+	if view.Services[0]["usd"] != "US$ 9,99" {
+		t.Fatalf("service money = %#v", view.Services[0])
+	}
+}
+
 func hasCostService(lines []models.CostLine, service string, cents int64) bool {
 	for _, l := range lines {
 		if l.Service == service && l.MonthlyCents == cents {

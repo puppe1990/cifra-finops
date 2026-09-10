@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/puppe1990/amarra-cais/pkg/cais/i18n"
 
@@ -32,11 +33,22 @@ func formatMoney(cents int64, currency string) string {
 	}
 }
 
-func formatCost(cents int64, source string) string {
-	if source == finops.SourceHetzner {
+func formatCost(cents int64, source, currency string) string {
+	if moneyCurrency(source, currency) == "EUR" {
 		return formatEUR(cents)
 	}
 	return formatUSD(cents)
+}
+
+func moneyCurrency(source, currency string) string {
+	switch strings.ToUpper(strings.TrimSpace(currency)) {
+	case "EUR", "USD":
+		return strings.ToUpper(strings.TrimSpace(currency))
+	}
+	if source == finops.SourceHetzner {
+		return "EUR"
+	}
+	return "USD"
 }
 
 func catalogOrEN(cat *i18n.Catalog) *i18n.Catalog {

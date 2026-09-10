@@ -19,9 +19,9 @@ func (s *SQLiteStore) ReplaceResources(accountID int64, resources []models.Cloud
 		}
 		_, err := s.db.Exec(
 			`INSERT INTO cloud_resources
-             (cloud_account_id, kind, name, region, state, monthly_cents, source, external_id, meta_json)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-			accountID, r.Kind, r.Name, r.Region, r.State, r.MonthlyCents, r.Source, r.ExternalID, r.MetaJSON,
+             (cloud_account_id, kind, name, region, state, monthly_cents, source, currency, external_id, meta_json)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			accountID, r.Kind, r.Name, r.Region, r.State, r.MonthlyCents, r.Source, r.Currency, r.ExternalID, r.MetaJSON,
 		)
 		if err != nil {
 			return fmt.Errorf("insert resource %s: %w", r.Name, err)
@@ -33,7 +33,7 @@ func (s *SQLiteStore) ReplaceResources(accountID int64, resources []models.Cloud
 func (s *SQLiteStore) ListResourcesForTenant(tenantID int64) ([]models.CloudResource, error) {
 	rows, err := s.db.Query(
 		`SELECT r.id, r.cloud_account_id, r.kind, r.name, r.region, r.state,
-                r.monthly_cents, r.source, r.external_id, r.meta_json
+                r.monthly_cents, r.source, r.currency, r.external_id, r.meta_json
          FROM cloud_resources r
          JOIN cloud_accounts a ON a.id = r.cloud_account_id
          WHERE a.tenant_id = ?
@@ -50,7 +50,7 @@ func (s *SQLiteStore) ListResourcesForTenant(tenantID int64) ([]models.CloudReso
 func (s *SQLiteStore) ListResources(accountID int64) ([]models.CloudResource, error) {
 	rows, err := s.db.Query(
 		`SELECT id, cloud_account_id, kind, name, region, state,
-                monthly_cents, source, external_id, meta_json
+                monthly_cents, source, currency, external_id, meta_json
          FROM cloud_resources WHERE cloud_account_id = ?
          ORDER BY monthly_cents DESC, name`,
 		accountID,
@@ -68,7 +68,7 @@ func scanResources(rows *sql.Rows) ([]models.CloudResource, error) {
 		var r models.CloudResource
 		if err := rows.Scan(
 			&r.ID, &r.CloudAccountID, &r.Kind, &r.Name, &r.Region, &r.State,
-			&r.MonthlyCents, &r.Source, &r.ExternalID, &r.MetaJSON,
+			&r.MonthlyCents, &r.Source, &r.Currency, &r.ExternalID, &r.MetaJSON,
 		); err != nil {
 			return nil, err
 		}
@@ -83,9 +83,9 @@ func (s *SQLiteStore) ReplaceCostLines(accountID int64, lines []models.CostLine)
 	}
 	for _, line := range lines {
 		_, err := s.db.Exec(
-			`INSERT INTO cost_lines (cloud_account_id, service, usage_type, monthly_cents, source, period_start, period_end)
-             VALUES (?, ?, ?, ?, ?, ?, ?)`,
-			accountID, line.Service, line.UsageType, line.MonthlyCents, line.Source, line.PeriodStart, line.PeriodEnd,
+			`INSERT INTO cost_lines (cloud_account_id, service, usage_type, monthly_cents, source, currency, period_start, period_end)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+			accountID, line.Service, line.UsageType, line.MonthlyCents, line.Source, line.Currency, line.PeriodStart, line.PeriodEnd,
 		)
 		if err != nil {
 			return fmt.Errorf("insert cost line: %w", err)
@@ -96,7 +96,7 @@ func (s *SQLiteStore) ReplaceCostLines(accountID int64, lines []models.CostLine)
 
 func (s *SQLiteStore) ListCostLines(accountID int64) ([]models.CostLine, error) {
 	rows, err := s.db.Query(
-		`SELECT id, cloud_account_id, service, usage_type, monthly_cents, source, period_start, period_end
+		`SELECT id, cloud_account_id, service, usage_type, monthly_cents, source, currency, period_start, period_end
          FROM cost_lines WHERE cloud_account_id = ? ORDER BY monthly_cents DESC`,
 		accountID,
 	)
@@ -109,7 +109,7 @@ func (s *SQLiteStore) ListCostLines(accountID int64) ([]models.CostLine, error) 
 		var line models.CostLine
 		if err := rows.Scan(
 			&line.ID, &line.CloudAccountID, &line.Service, &line.UsageType, &line.MonthlyCents,
-			&line.Source, &line.PeriodStart, &line.PeriodEnd,
+			&line.Source, &line.Currency, &line.PeriodStart, &line.PeriodEnd,
 		); err != nil {
 			return nil, err
 		}

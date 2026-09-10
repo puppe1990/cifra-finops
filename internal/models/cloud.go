@@ -25,6 +25,7 @@ type CloudResource struct {
 	State          string
 	MonthlyCents   int64
 	Source         string
+	Currency       string
 	ExternalID     string
 	MetaJSON       string
 }
@@ -36,6 +37,7 @@ type CostLine struct {
 	UsageType      string
 	MonthlyCents   int64
 	Source         string
+	Currency       string
 	PeriodStart    string
 	PeriodEnd      string
 }
