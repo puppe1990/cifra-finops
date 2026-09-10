@@ -71,8 +71,7 @@ func (h *DashboardHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	cat := requestCatalog(r, h.cfg.Locale)
 
 	if h.syncer != nil && lm.IsCurrent {
-		resources, _ := h.store.ListResourcesForTenant(ws.Tenant.ID)
-		if len(resources) == 0 {
+		if needsAWSInventorySync(h.store, ws.Tenant.ID) {
 			ctx, cancel := context.WithTimeout(r.Context(), 25*time.Second)
 			_ = h.syncer.SyncTenant(ctx, ws.Tenant.ID)
 			cancel()
@@ -314,19 +313,59 @@ func sumCostLines(costLines []models.CostLine) (monthly int64, lines []models.Co
 }
 
 func lastSyncProps(s store.Store, accounts []models.CloudAccount) map[string]any {
-	var lastSync map[string]any
+	var last, failed, warned map[string]any
 	for _, acc := range accounts {
-		if run, err := s.LastSyncRun(acc.ID); err == nil && run.ID != 0 {
-			lastSync = map[string]any{
-				"status":  run.Status,
-				"source":  run.Source,
-				"warning": run.Warning,
-				"error":   run.Error,
-				"at":      run.StartedAt.Format(time.RFC3339),
-			}
+		run, err := s.LastSyncRun(acc.ID)
+		if err != nil || run.ID == 0 {
+			continue
+		}
+		props := map[string]any{
+			"status":  run.Status,
+			"source":  run.Source,
+			"warning": run.Warning,
+			"error":   run.Error,
+			"at":      run.StartedAt.Format(time.RFC3339),
+		}
+		last = props
+		if run.Status == finops.SyncFailed {
+			failed = props
+			continue
+		}
+		if warned == nil && (run.Error != "" || run.Warning != "") {
+			warned = props
 		}
 	}
-	return lastSync
+	if failed != nil {
+		return failed
+	}
+	if warned != nil {
+		return warned
+	}
+	return last
+}
+
+func needsAWSInventorySync(s store.Store, tenantID int64) bool {
+	accounts, err := s.ListCloudAccounts(tenantID)
+	if err != nil {
+		return false
+	}
+	resources, err := s.ListResourcesForTenant(tenantID)
+	if err != nil {
+		return false
+	}
+	count := map[int64]int{}
+	for _, r := range resources {
+		count[r.CloudAccountID]++
+	}
+	for _, acc := range accounts {
+		if acc.Provider == finops.ProviderHetzner {
+			continue
+		}
+		if count[acc.ID] == 0 {
+			return true
+		}
+	}
+	return false
 }
 
 func attachForecast(ctx context.Context, syn *syncer.Syncer, tenantID int64, now time.Time, cat *i18n.Catalog, summary map[string]any) {

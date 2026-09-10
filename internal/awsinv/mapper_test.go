@@ -60,3 +60,26 @@ func TestIsAccessDenied_detectsAWSMessage(t *testing.T) {
 		t.Fatal("timeout should not look like access denied")
 	}
 }
+
+func TestIsCredentialError_detectsMissingChain(t *testing.T) {
+	imds := deniedError("failed to refresh cached credentials, no EC2 IMDS role found, operation error ec2imds: GetMetadata")
+	if !IsCredentialError(imds) {
+		t.Fatal("IMDS miss should be a credential error")
+	}
+	if IsCredentialError(deniedError("not authorized to perform: ce:GetCostAndUsage")) {
+		t.Fatal("CE AccessDenied is IAM, not missing credentials")
+	}
+	if IsCredentialError(nil) {
+		t.Fatal("nil")
+	}
+}
+
+func TestCredentialCollectError_abortsIMDS(t *testing.T) {
+	err := credentialCollectError(deniedError("no EC2 IMDS role found"))
+	if err == nil {
+		t.Fatal("expected abort")
+	}
+	if credentialCollectError(deniedError("not authorized to perform: ce:GetCostAndUsage")) != nil {
+		t.Fatal("CE deny should not abort collect")
+	}
+}

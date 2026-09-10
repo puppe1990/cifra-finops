@@ -21,6 +21,9 @@
     <button type="submit" class="border border-copper-500 px-4 py-2 font-mono text-xs uppercase tracking-widest text-copper-400 hover:bg-copper-500 hover:text-ink-950">{{ index .labels "dash.sync" }}</button>
   </form>
 </div>
+{{ if .lastSync }}{{ if or .lastSync.error .lastSync.warning }}
+<p data-sync-error class="mt-4 border border-copper-500/40 bg-ink-900 px-4 py-3 text-sm text-paper-50">{{ index .labels "dash.aws_creds" }} {{ if .lastSync.error }}{{ .lastSync.error }}{{ else }}{{ .lastSync.warning }}{{ end }}</p>
+{{ end }}{{ end }}
 <section class="mt-10">
   <p class="font-mono text-[10px] uppercase tracking-[0.3em] text-paper-200">{{ index .labels "dash.runrate" }}</p>
   {{ if .summary.monthlyUSD }}<p class="mt-2 font-display text-6xl leading-none tracking-tight text-copper-400 md:text-7xl">{{ .summary.monthlyUSD }}</p>{{ end }}

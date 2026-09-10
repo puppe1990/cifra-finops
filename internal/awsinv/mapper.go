@@ -117,6 +117,25 @@ func IsAccessDenied(err error) bool {
 		strings.Contains(msg, "access denied")
 }
 
+func IsCredentialError(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "no ec2 imds role") ||
+		strings.Contains(msg, "failed to refresh cached credentials") ||
+		strings.Contains(msg, "failed to retrieve credentials") ||
+		strings.Contains(msg, "nocredentialproviders") ||
+		strings.Contains(msg, "no valid providers in chain")
+}
+
+func credentialCollectError(err error) error {
+	if !IsCredentialError(err) {
+		return nil
+	}
+	return fmt.Errorf("aws credentials: %w", err)
+}
+
 func toCostest(items []resourceInput) []costest.Line {
 	out := make([]costest.Line, 0, len(items))
 	for _, item := range items {
