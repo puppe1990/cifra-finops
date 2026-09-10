@@ -37,6 +37,13 @@ func TestAccountsHandler_List_secretKeyHasEyeToggle(t *testing.T) {
 		t.Fatal("redirected; workspace missing for list")
 	}
 	assertPasswordEyeToggles(t, rr.Body.String(), 2)
+	body := rr.Body.String()
+	if !strings.Contains(body, `value="access_keys" selected`) {
+		t.Fatal("access keys should be the default auth mode on a VPS")
+	}
+	if strings.Contains(body, `id="aws-keys" hidden`) {
+		t.Fatal("access key fields must be visible when access_keys is the default")
+	}
 }
 
 func TestAccountsHandler_Create_updatesExistingToAccessKeys(t *testing.T) {

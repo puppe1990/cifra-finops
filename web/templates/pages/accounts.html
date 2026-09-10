@@ -20,10 +20,11 @@
   <input name="alias" placeholder="{{ index .labels "acc.ph_alias" }}" class="w-full border border-paper-200/20 bg-ink-800 p-2.5 text-sm" />
   <input name="region" value="us-east-1" placeholder="{{ index .labels "acc.ph_region" }}" class="w-full border border-paper-200/20 bg-ink-800 p-2.5 text-sm" />
   <select name="auth_mode" amarra-hook="reveal" data-amarra-reveal-show="access_keys" data-amarra-reveal-target="#aws-keys" class="w-full border border-paper-200/20 bg-ink-800 p-2.5 text-sm">
+    <option value="access_keys" selected>{{ index .labels "acc.mode_keys" }}</option>
     <option value="default_chain">{{ index .labels "acc.mode_chain" }}</option>
-    <option value="access_keys">{{ index .labels "acc.mode_keys" }}</option>
   </select>
-  <div id="aws-keys" hidden>
+  <p class="text-xs text-paper-200">{{ index .labels "acc.mode_chain_help" }}</p>
+  <div id="aws-keys">
     <input name="access_key_id" placeholder="AWS_ACCESS_KEY_ID" class="mt-3 w-full border border-paper-200/20 bg-ink-800 p-2.5 font-mono text-sm" />
     <div class="relative mt-3">
       <input type="password" name="secret_access_key" placeholder="AWS_SECRET_ACCESS_KEY" class="w-full border border-paper-200/20 bg-ink-800 p-2.5 font-mono text-sm" />

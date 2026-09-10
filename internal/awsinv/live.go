@@ -33,6 +33,9 @@ func (l *Live) Collect(ctx context.Context, creds Credentials) (Inventory, error
 	catalog := costest.DefaultLightsailCatalog()
 
 	if id, err := callerAccount(ctx, cfg); err != nil {
+		if cerr := credentialCollectError(err); cerr != nil {
+			return Inventory{}, cerr
+		}
 		inv.Warnings = append(inv.Warnings, "sts: "+err.Error())
 	} else if creds.AccountID == "" {
 		creds.AccountID = id
