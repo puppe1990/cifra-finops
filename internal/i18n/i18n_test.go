@@ -168,3 +168,14 @@ func TestNewCatalog_portuguese(t *testing.T) {
 		t.Errorf("HTMLLang() = %q, want pt-BR", c.HTMLLang())
 	}
 }
+
+func TestLabels_amplifyByUsage(t *testing.T) {
+	en := Labels("en")
+	pt := Labels("pt-BR")
+	if en["dash.amplify"] != "Amplify by usage" {
+		t.Fatalf("en dash.amplify = %q", en["dash.amplify"])
+	}
+	if pt["dash.amplify"] != "Amplify por uso" {
+		t.Fatalf("pt dash.amplify = %q", pt["dash.amplify"])
+	}
+}

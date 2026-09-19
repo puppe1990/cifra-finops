@@ -98,6 +98,7 @@ var ptMessages = map[string]string{
 	"dash.accounts":          "Contas",
 	"dash.ce_banner":         "A IAM desta conta não lê Cost Explorer. O Cifra está estimando Lightsail + S3. Cole a policy em",
 	"dash.by_service":        "Por serviço",
+	"dash.amplify":           "Amplify por uso",
 	"dash.nothing_synced":    "Nada sincronizado ainda. Clique em Sincronizar.",
 	"dash.findings":          "Achados",
 	"dash.no_findings":       "Nenhum achado neste workspace.",

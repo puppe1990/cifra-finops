@@ -98,6 +98,7 @@ var enMessages = map[string]string{
 	"dash.accounts":          "Accounts",
 	"dash.ce_banner":         "This account’s IAM cannot read Cost Explorer. Cifra is estimating Lightsail + S3. Paste the policy in",
 	"dash.by_service":        "By service",
+	"dash.amplify":           "Amplify by usage",
 	"dash.nothing_synced":    "Nothing synced yet. Click Sync.",
 	"dash.findings":          "Findings",
 	"dash.no_findings":       "No findings in this workspace.",

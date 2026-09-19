@@ -54,6 +54,22 @@
     {{ end }}
   </ul>
 </section>
+{{ if .amplify }}
+<section class="mt-16">
+  <h3 class="font-display text-2xl">{{ index .labels "dash.amplify" }}</h3>
+  <ul class="mt-6 space-y-8">
+    {{ range .amplify }}
+    <li class="border-b border-paper-200/10 pb-8 last:border-b-0 last:pb-0">
+      <div class="flex items-baseline justify-between gap-4">
+        <h4 class="font-display text-xl leading-tight">{{ .name }}</h4>
+        <p class="shrink-0 font-mono text-lg text-copper-400">{{ .usd }}</p>
+      </div>
+      <div class="mt-4 w-full bg-ink-800" style="height: 0.45rem"><div class="h-full bg-copper-400" data-testid="amplify-bar" style="width: {{ .pct }}%"></div></div>
+    </li>
+    {{ end }}
+  </ul>
+</section>
+{{ end }}
 {{ if .findings }}
 <section class="mt-16">
   <h3 class="font-display text-2xl">{{ index .labels "dash.findings" }}</h3>

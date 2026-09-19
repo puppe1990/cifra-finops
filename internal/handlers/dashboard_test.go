@@ -270,3 +270,82 @@ func TestDashboardHandler_zeroForecastOmitsProp(t *testing.T) {
 		t.Fatalf("forecastUSD=%v", summary["forecastUSD"])
 	}
 }
+
+func TestDashboardHandler_amplifySectionGroupsUsage(t *testing.T) {
+	s := setupTestStore(t)
+	uid, err := s.CreateUser("ops@example.com", "hash")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv(finops.SeedAccountEnv, "111111111111")
+	if err := seed.EnsurePrimaryWorkspace(s, uid); err != nil {
+		t.Fatal(err)
+	}
+	tenant, _ := s.FindTenantBySlug(finops.PrimaryTenantSlug)
+	accounts, _ := s.ListCloudAccounts(tenant.ID)
+	_ = s.ReplaceCostLines(accounts[0].ID, []models.CostLine{
+		{Service: finops.AmplifyService, UsageType: "USE1-BuildDuration", MonthlyCents: 721, Source: finops.SourceCE},
+		{Service: finops.AmplifyService, UsageType: "EU-BuildDuration", MonthlyCents: 100, Source: finops.SourceCE},
+		{Service: finops.AmplifyService, UsageType: "USE1-DataStorage", MonthlyCents: 200, Source: finops.SourceCE},
+	})
+
+	h := NewDashboardHandler(setupTestRenderer(t), s, testSite(), cais.Config{}, setupTestViews(t))
+	h.now = func() time.Time { return time.Date(2026, 8, 20, 0, 0, 0, 0, time.UTC) }
+
+	req := inertiaRequest(http.MethodGet, "/dashboard", nil)
+	req = session.WithUserID(req, uid)
+	rr := httptest.NewRecorder()
+	h.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status=%d body=%s", rr.Code, rr.Body.String())
+	}
+	body := rr.Body.String()
+	if !strings.Contains(body, `data-testid="amplify-bar"`) {
+		t.Fatalf("missing amplify bar: %s", body)
+	}
+	if !strings.Contains(body, "BuildDuration") {
+		t.Fatalf("missing BuildDuration dimension: %s", body)
+	}
+	if !strings.Contains(body, "US$ 8,21") {
+		t.Fatalf("missing amortized BuildDuration total: %s", body)
+	}
+	if !strings.Contains(body, `width: 100%`) {
+		t.Fatalf("expected BuildDuration width 100%%: %s", body)
+	}
+	if !strings.Contains(body, `width: 24%`) {
+		t.Fatalf("expected DataStorage width 24%%: %s", body)
+	}
+}
+
+func TestDashboardHandler_amplifySectionOmittedWithoutAmplifyLines(t *testing.T) {
+	s := setupTestStore(t)
+	uid, err := s.CreateUser("ops@example.com", "hash")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv(finops.SeedAccountEnv, "111111111111")
+	if err := seed.EnsurePrimaryWorkspace(s, uid); err != nil {
+		t.Fatal(err)
+	}
+	tenant, _ := s.FindTenantBySlug(finops.PrimaryTenantSlug)
+	accounts, _ := s.ListCloudAccounts(tenant.ID)
+	_ = s.ReplaceCostLines(accounts[0].ID, []models.CostLine{
+		{Service: "Amazon Lightsail", UsageType: "StaticIp", MonthlyCents: 500, Source: finops.SourceCE},
+	})
+
+	h := NewDashboardHandler(setupTestRenderer(t), s, testSite(), cais.Config{}, setupTestViews(t))
+	h.now = func() time.Time { return time.Date(2026, 8, 20, 0, 0, 0, 0, time.UTC) }
+
+	req := inertiaRequest(http.MethodGet, "/dashboard", nil)
+	req = session.WithUserID(req, uid)
+	rr := httptest.NewRecorder()
+	h.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status=%d body=%s", rr.Code, rr.Body.String())
+	}
+	if strings.Contains(rr.Body.String(), `data-testid="amplify-bar"`) {
+		t.Fatalf("amplify section should be omitted without Amplify lines: %s", rr.Body.String())
+	}
+}
