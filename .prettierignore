@@ -4,9 +4,8 @@ tmp/
 data/
 web/templates/
 web/src/
-web/static/build/
-web/static/js/amarra.js
-web/static/css/styles.css
+# web/static is built CSS + vendored PWA assets (amarra-cais pwa rewrites it)
+web/static/
 docs/superpowers/
 package-lock.json
 go.sum

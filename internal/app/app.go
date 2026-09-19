@@ -118,7 +118,7 @@ func healthHandler(s store.Store, cfg cais.Config) http.HandlerFunc {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(code)
-		_ = json.NewEncoder(w).Encode(netutil.HealthPayload(status, cfg.Port))
+		_ = json.NewEncoder(w).Encode(netutil.HealthPayload(status, cfg.Port, cfg.Env))
 	}
 }
 
