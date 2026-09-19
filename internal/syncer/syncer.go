@@ -196,6 +196,21 @@ func (s *Syncer) SyncTenant(ctx context.Context, tenantID int64) error {
 	return first
 }
 
+// SyncAllTenants refreshes every workspace, used by the scheduled monthly job.
+func (s *Syncer) SyncAllTenants(ctx context.Context) error {
+	tenants, err := s.store.ListTenants()
+	if err != nil {
+		return err
+	}
+	var first error
+	for _, tenant := range tenants {
+		if err := s.SyncTenant(ctx, tenant.ID); err != nil && first == nil {
+			first = fmt.Errorf("sync tenant %s: %w", tenant.Slug, err)
+		}
+	}
+	return first
+}
+
 type storeRun struct {
 	ID      int64
 	Status  string

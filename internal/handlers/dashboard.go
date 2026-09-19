@@ -47,6 +47,7 @@ func (h *DashboardHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		"env":           h.cfg.Env,
 		"summary":       map[string]any{},
 		"services":      []any{},
+		"amplify":       []any{},
 		"resources":     []any{},
 		"findings":      []any{},
 		"budgets":       []any{},
@@ -109,6 +110,7 @@ func (h *DashboardHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	props["summary"] = view.Summary
 	props["services"] = withSpendPct(view.Services)
+	props["amplify"] = withSpendPct(view.Amplify)
 	props["resources"] = view.Resources
 	props["findings"] = view.Findings
 	props["budgets"] = view.Budgets
@@ -128,6 +130,7 @@ func (h *DashboardHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 type tenantView struct {
 	Summary   map[string]any
 	Services  []map[string]any
+	Amplify   []map[string]any
 	Resources []map[string]any
 	Findings  []map[string]any
 	Budgets   []map[string]any
@@ -208,6 +211,7 @@ func buildTenantView(s store.Store, tenantID int64, cat *i18n.Catalog, lm awsinv
 			"ceDenied":      denied,
 		},
 		Services:  serviceProps(costLines),
+		Amplify:   amplifyProps(costLines),
 		Resources: resourceProps(resources, cat),
 		Findings:  findingProps(shownFindings, cat),
 		Budgets:   budgetProps(budgets, usd),

@@ -92,6 +92,25 @@ func (s *SQLiteStore) ListTenantsForUser(userID int64) ([]models.Tenant, error) 
 	return out, rows.Err()
 }
 
+func (s *SQLiteStore) ListTenants() ([]models.Tenant, error) {
+	rows, err := s.db.Query(
+		`SELECT id, name, slug, created_at FROM tenants ORDER BY name`,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("list tenants: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	var out []models.Tenant
+	for rows.Next() {
+		var t models.Tenant
+		if err := rows.Scan(&t.ID, &t.Name, &t.Slug, &t.CreatedAt); err != nil {
+			return nil, err
+		}
+		out = append(out, t)
+	}
+	return out, rows.Err()
+}
+
 func (s *SQLiteStore) SetActiveTenant(userID, tenantID int64) error {
 	_, err := s.db.Exec("UPDATE users SET active_tenant_id = ? WHERE id = ?", tenantID, userID)
 	if err != nil {

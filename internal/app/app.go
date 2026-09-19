@@ -17,6 +17,7 @@ import (
 	"github.com/puppe1990/amarra-cais/pkg/cais/netutil"
 
 	"github.com/puppe1990/cifra-finops/internal/crypto"
+	"github.com/puppe1990/cifra-finops/internal/scheduler"
 	"github.com/puppe1990/cifra-finops/internal/store"
 	"github.com/puppe1990/cifra-finops/internal/syncer"
 )
@@ -46,10 +47,11 @@ func ResolveAppSecret(env, secret string) ([]byte, error) {
 }
 
 type App struct {
-	config cais.Config
-	store  store.Store
-	router *cais.Router
-	server *http.Server
+	config  cais.Config
+	store   store.Store
+	router  *cais.Router
+	server  *http.Server
+	monthly *scheduler.Monthly
 }
 
 func New(cfg cais.Config, deps Deps) (*App, error) {
@@ -85,10 +87,16 @@ func New(cfg cais.Config, deps Deps) (*App, error) {
 	devlog.Register(r, cfg.Env, buf)
 	r.Get("/health", healthHandler(deps.Store, cfg))
 
+	var monthly *scheduler.Monthly
+	if deps.Syncer != nil {
+		monthly = newMonthlySync(deps.Syncer.SyncAllTenants)
+	}
+
 	return &App{
-		config: cfg,
-		store:  deps.Store,
-		router: r,
+		config:  cfg,
+		store:   deps.Store,
+		router:  r,
+		monthly: monthly,
 		server: &http.Server{
 			Addr:              cfg.Port,
 			Handler:           r,
@@ -123,6 +131,12 @@ func (a *App) Run() error {
 }
 
 func (a *App) RunContext(ctx context.Context) error {
+	runCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	if a.monthly != nil {
+		go a.monthly.Run(runCtx)
+	}
+
 	errCh := make(chan error, 1)
 	go func() {
 		errCh <- a.server.ListenAndServe()

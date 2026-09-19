@@ -19,6 +19,62 @@ func (s stubCollector) Collect(_ context.Context, _ awsinv.Credentials) (awsinv.
 	return s.inv, s.err
 }
 
+func TestSyncer_SyncAllTenants_syncsEachWorkspace(t *testing.T) {
+	s, err := store.NewSQLiteStore(":memory:", "test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = s.Close() })
+
+	alpha, err := s.CreateTenant("Alpha", "alpha")
+	if err != nil {
+		t.Fatal(err)
+	}
+	beta, err := s.CreateTenant("Beta", "beta")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, tc := range []struct {
+		tenantID int64
+		account  string
+	}{
+		{alpha, "111111111111"},
+		{beta, "222222222222"},
+	} {
+		if _, err := s.CreateCloudAccount(models.CloudAccount{
+			TenantID:     tc.tenantID,
+			AWSAccountID: tc.account,
+			Alias:        "principal",
+			Region:       "us-east-1",
+			AuthMode:     finops.AuthModeDefaultChain,
+			IsPrimary:    true,
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	col := stubCollector{inv: awsinv.Inventory{
+		Source: finops.SourceEstimate,
+		Resources: []models.CloudResource{{
+			Kind: "lightsail_instance", Name: "web-small", Region: "us-east-1",
+			MonthlyCents: 1200, Source: finops.SourceEstimate, ExternalID: "web-small",
+		}},
+	}}
+
+	if err := New(s, col).SyncAllTenants(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	for _, tid := range []int64{alpha, beta} {
+		resources, err := s.ListResourcesForTenant(tid)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(resources) != 1 {
+			t.Fatalf("tenant %d resources = %d, want 1", tid, len(resources))
+		}
+	}
+}
+
 func TestSyncer_persistsInventoryForAccount(t *testing.T) {
 	s, err := store.NewSQLiteStore(":memory:", "test")
 	if err != nil {
