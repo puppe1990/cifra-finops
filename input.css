@@ -538,3 +538,53 @@ html.light {
     }
   }
 }
+
+@layer components {
+  /* Amplify usage hint: on-brand floating tooltip on hover / keyboard focus. */
+  .amp-hint {
+    @apply relative inline-flex align-middle;
+  }
+
+  .amp-hint__mark {
+    @apply inline-flex h-4 w-4 cursor-help items-center justify-center rounded-full border border-copper-500/50 font-mono text-[10px] leading-none text-copper-400 transition-colors;
+  }
+
+  .amp-hint__mark:hover,
+  .amp-hint__mark:focus-visible {
+    @apply border-copper-500 bg-copper-500 text-ink-950 outline-none;
+  }
+
+  .amp-hint__panel {
+    @apply pointer-events-none invisible absolute left-1/2 top-[calc(100%+0.55rem)] z-30 w-max max-w-[17rem] -translate-x-1/2 translate-y-1 rounded-sm border border-copper-500/50 bg-ink-800 px-3 py-2 text-left font-sans text-xs leading-relaxed text-paper-100 opacity-0 transition duration-150;
+    box-shadow: 0 12px 28px -14px rgb(0 0 0 / 0.75);
+  }
+
+  .amp-hint__panel::before {
+    position: absolute;
+    top: -0.3rem;
+    left: 50%;
+    width: 0.55rem;
+    height: 0.55rem;
+    background: rgb(var(--ink-800));
+    border-top: 1px solid rgb(var(--copper-500) / 0.5);
+    border-left: 1px solid rgb(var(--copper-500) / 0.5);
+    content: "";
+    transform: translateX(-50%) rotate(45deg);
+  }
+
+  .amp-hint:hover .amp-hint__panel,
+  .amp-hint:focus-within .amp-hint__panel {
+    @apply visible translate-y-0 opacity-100;
+  }
+
+  @media (max-width: 640px) {
+    .amp-hint__panel {
+      @apply left-0 translate-x-0;
+    }
+
+    .amp-hint__panel::before {
+      left: 0.75rem;
+      transform: rotate(45deg);
+    }
+  }
+}

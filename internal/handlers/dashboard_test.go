@@ -319,6 +319,9 @@ func TestDashboardHandler_amplifySectionGroupsUsage(t *testing.T) {
 	if !strings.Contains(body, `data-testid="amplify-hint"`) {
 		t.Fatalf("missing amplify hint: %s", body)
 	}
+	if !strings.Contains(body, "amp-hint__panel") {
+		t.Fatalf("missing amplify hint panel: %s", body)
+	}
 }
 
 func TestDashboardHandler_amplifySectionOmittedWithoutAmplifyLines(t *testing.T) {
