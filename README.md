@@ -14,6 +14,8 @@ The app UI is available in **English** and **Brazilian Portuguese**. Use the **E
 - Shows the minimum IAM policy needed for real billing data
 - Lets each workspace link more AWS accounts (default credential chain or encrypted access keys)
 - Links Hetzner Cloud projects with a read API token and estimates EUR monthly burn from live inventory (servers, volumes, IPs, load balancers, snapshots, traffic)
+- Breaks down AWS Amplify spend by usage dimension (build, storage, transfer, SSR, WAF), most expensive first
+- Refreshes every workspace automatically on the last day of each month (UTC hour via `CIFRA_MONTHLY_SYNC_HOUR`, default 23)
 
 Development login: `demo@example.com` / `password`.
 

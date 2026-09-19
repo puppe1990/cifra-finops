@@ -35,6 +35,7 @@ type Store interface {
 	CreateTenant(name, slug string) (int64, error)
 	FindTenantBySlug(slug string) (models.Tenant, error)
 	FindTenantByID(id int64) (models.Tenant, error)
+	ListTenants() ([]models.Tenant, error)
 	AddMember(tenantID, userID int64, role string) error
 	MembershipRole(tenantID, userID int64) (string, bool, error)
 	ListTenantsForUser(userID int64) ([]models.Tenant, error)

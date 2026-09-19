@@ -5,7 +5,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/puppe1990/aws-finops/internal/scheduler"
+	"github.com/puppe1990/cifra-finops/internal/scheduler"
 )
 
 const (

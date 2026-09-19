@@ -64,6 +64,24 @@ func TestStore_ListResources_isolatedByTenant(t *testing.T) {
 	}
 }
 
+func TestStore_ListTenants_returnsAllOrderedByName(t *testing.T) {
+	s := newTestStore(t)
+	if _, err := s.CreateTenant("Zeta", "zeta"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.CreateTenant("Alpha", "alpha"); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := s.ListTenants()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 2 || got[0].Slug != "alpha" || got[1].Slug != "zeta" {
+		t.Fatalf("tenants = %#v, want alpha then zeta", got)
+	}
+}
+
 func TestStore_EnsureCloudAccount_updatesExisting(t *testing.T) {
 	s := newTestStore(t)
 	tid, err := s.CreateTenant("Demo", "demo")
