@@ -64,6 +64,7 @@ type Store interface {
 	EnsureBudget(b models.Budget) error
 
 	Sessions() session.Store
+	DB() *sql.DB
 	Ping() error
 	Close() error
 }
