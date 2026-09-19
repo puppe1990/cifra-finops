@@ -103,11 +103,15 @@ cais install          # npm + go mod tidy (+ Tailwind build)
 cais dev              # air + tailwind + vite watch
 cais test             # go test ./...
 npm run test:fe       # Vitest (Svelte)
-make ci               # test + lint + format-check
+make css              # rebuild committed web/static/css/styles.css
+make ci               # test + lint + format-check + css-check
 cais doctor [--mobile]
 cais routes
 cais db migrate | status | rollback | seed
 ```
+
+`web/static/css/styles.css` is committed. After changing Tailwind classes in
+`web/templates/` or `input.css`, run `make css`; CI (`css-check`) fails if it is stale.
 
 ## Do not
 

@@ -1,4 +1,4 @@
-.PHONY: dev build test css css-watch lint format format-check pre-commit-install ci
+.PHONY: dev build test css css-watch css-check lint format format-check pre-commit-install ci
 
 CAIS := $(shell command -v amarra-cais 2>/dev/null || command -v $(HOME)/go/bin/amarra-cais 2>/dev/null || command -v cais 2>/dev/null)
 
@@ -21,13 +21,17 @@ format-check:
 pre-commit-install:
 	pre-commit install
 
-ci: test lint format-check
+ci: test lint format-check css-check
 
 css:
 	npx tailwindcss -i $(CSS_IN) -o $(CSS_OUT) --minify
 
 css-watch:
 	npx tailwindcss -i $(CSS_IN) -o $(CSS_OUT) --watch
+
+css-check:
+	npx tailwindcss -i $(CSS_IN) -o $(CSS_OUT) --minify
+	git diff --exit-code -- $(CSS_OUT)
 
 build: css
 	CGO_ENABLED=0 go build -ldflags="-s -w" -o $(BIN) ./cmd/server
