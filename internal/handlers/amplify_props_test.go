@@ -46,3 +46,19 @@ func TestAmplifyProps_emptyWhenNoAmplifyLines(t *testing.T) {
 		t.Fatalf("got = %#v, want empty", got)
 	}
 }
+
+func TestAmplifyProps_setsHintKeyPerDimension(t *testing.T) {
+	got := amplifyProps([]models.CostLine{
+		{Service: finops.AmplifyService, UsageType: "USE1-BuildDuration", MonthlyCents: 100, Source: finops.SourceCE},
+		{Service: finops.AmplifyService, UsageType: "USE1-DataStorage", MonthlyCents: 50, Source: finops.SourceCE},
+	})
+	if len(got) != 2 {
+		t.Fatalf("dimensions = %d, want 2: %#v", len(got), got)
+	}
+	if got[0]["hintKey"] != "amplify.hint.BuildDuration" {
+		t.Fatalf("BuildDuration hintKey = %v", got[0]["hintKey"])
+	}
+	if got[1]["hintKey"] != "amplify.hint.DataStorage" {
+		t.Fatalf("DataStorage hintKey = %v", got[1]["hintKey"])
+	}
+}
