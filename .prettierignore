@@ -7,5 +7,6 @@ web/src/
 web/static/build/
 web/static/js/amarra.js
 web/static/css/styles.css
+docs/superpowers/
 package-lock.json
 go.sum
