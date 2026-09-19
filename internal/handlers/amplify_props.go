@@ -18,5 +18,9 @@ func amplifyProps(lines []models.CostLine) []map[string]any {
 		}
 		sums[finops.AmplifyDimension(line.UsageType)] += line.MonthlyCents
 	}
-	return usageDetails(sums, source, currency)
+	out := usageDetails(sums, source, currency)
+	for _, row := range out {
+		row["hintKey"] = "amplify.hint." + row["name"].(string)
+	}
+	return out
 }

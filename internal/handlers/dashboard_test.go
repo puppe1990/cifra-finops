@@ -316,6 +316,9 @@ func TestDashboardHandler_amplifySectionGroupsUsage(t *testing.T) {
 	if !strings.Contains(body, `width: 24%`) {
 		t.Fatalf("expected DataStorage width 24%%: %s", body)
 	}
+	if !strings.Contains(body, `data-testid="amplify-hint"`) {
+		t.Fatalf("missing amplify hint: %s", body)
+	}
 }
 
 func TestDashboardHandler_amplifySectionOmittedWithoutAmplifyLines(t *testing.T) {

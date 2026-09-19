@@ -179,3 +179,23 @@ func TestLabels_amplifyByUsage(t *testing.T) {
 		t.Fatalf("pt dash.amplify = %q", pt["dash.amplify"])
 	}
 }
+
+func TestLabels_amplifyHints(t *testing.T) {
+	en := Labels("en")
+	pt := Labels("pt-BR")
+	for _, dim := range []string{
+		"BuildDuration",
+		"DataStorage",
+		"DataTransferOut",
+		"HostingComputeRequestCount",
+		"HostingComputeRequestDuration",
+	} {
+		key := "amplify.hint." + dim
+		if en[key] == "" {
+			t.Errorf("en missing %s", key)
+		}
+		if pt[key] == "" {
+			t.Errorf("pt missing %s", key)
+		}
+	}
+}
