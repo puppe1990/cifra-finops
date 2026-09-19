@@ -765,6 +765,7 @@
     applyDriveResponse: () => applyDriveResponse,
     driveHeaders: () => driveHeaders,
     extractMainHTML: () => extractMainHTML,
+    extractMainTagName: () => extractMainTagName,
     shouldInterceptClick: () => shouldInterceptClick,
     shouldInterceptSubmit: () => shouldInterceptSubmit,
     start: () => start3,
@@ -780,6 +781,23 @@
       return lib.morph(el, html, { morphStyle: "innerHTML" });
     }
     if ("innerHTML" in el) el.innerHTML = html ?? "";
+  }
+
+  // pkg/amarra/js/sequence.mjs
+  var counters = /* @__PURE__ */ new WeakMap();
+  var fallback = 0;
+  function bumpSequence(key) {
+    if (!key || typeof key !== "object") {
+      fallback += 1;
+      return fallback;
+    }
+    const next = (counters.get(key) ?? 0) + 1;
+    counters.set(key, next);
+    return next;
+  }
+  function isCurrentSequence(key, seq) {
+    if (!key || typeof key !== "object") return seq === fallback;
+    return seq === (counters.get(key) ?? 0);
   }
 
   // pkg/amarra/js/hook.mjs
@@ -850,6 +868,56 @@
     return out;
   }
 
+  // pkg/amarra/js/hook_bulk.mjs
+  var STATE = "_amarraBulkState";
+  function makeBulk() {
+    return {
+      connect(el) {
+        if (!el?.querySelector) return;
+        const all = el.querySelector("[data-amarra-bulk-all]");
+        const rows = [...el.querySelectorAll?.("[data-amarra-bulk-row]") ?? []];
+        const bar = el.querySelector("[data-amarra-bulk-bar]");
+        const count = bar?.querySelector?.("[data-amarra-bulk-count]");
+        if (!all || rows.length === 0) return;
+        const sync = () => {
+          const selected = rows.filter((r) => r.checked).length;
+          all.indeterminate = selected > 0 && selected < rows.length;
+          all.checked = selected === rows.length;
+          if (bar) {
+            bar.hidden = selected === 0;
+            if (count) count.textContent = String(selected);
+          }
+        };
+        const onAll = () => {
+          for (const row of rows) row.checked = all.checked;
+          sync();
+        };
+        all.addEventListener?.("change", onAll);
+        const rowUnbinds = [];
+        for (const row of rows) {
+          const fn = () => sync();
+          row.addEventListener?.("change", fn);
+          rowUnbinds.push([row, fn]);
+        }
+        el[STATE] = { all, onAll, rowUnbinds };
+      },
+      // #126: Idiomorph keeps the container and swaps children; rebind so the
+      // hook tracks the new nodes instead of stale references.
+      updated(el) {
+        bulk.disconnect(el);
+        bulk.connect(el);
+      },
+      disconnect(el) {
+        const st = el?.[STATE];
+        if (!st) return;
+        st.all.removeEventListener?.("change", st.onAll);
+        for (const [row, fn] of st.rowUnbinds) row.removeEventListener?.("change", fn);
+        delete el[STATE];
+      }
+    };
+  }
+  var bulk = makeBulk();
+
   // pkg/amarra/js/hook_clipboard.mjs
   var CLICK = "_amarraClipboardClick";
   function makeClipboard(writeText) {
@@ -877,11 +945,381 @@
     if (typeof write === "function") return write.call(globalThis.navigator.clipboard, text);
   });
 
+  // pkg/amarra/js/hook_dialog.mjs
+  var OPEN = "_amarraDialogOpen";
+  var CLOSE = "_amarraDialogClose";
+  var ONCLOSE = "_amarraDialogOnClose";
+  var STATE2 = "_amarraDialogState";
+  function makeDialog() {
+    return {
+      connect(el) {
+        if (!el?.querySelector) return;
+        const dlg = el.querySelector("[data-amarra-dialog-target]");
+        if (!dlg || typeof dlg.showModal !== "function") return;
+        if (!dlg.getAttribute?.("aria-modal")) dlg.setAttribute?.("aria-modal", "true");
+        const openers = [...el.querySelectorAll?.("[data-amarra-dialog-open]") ?? []];
+        const closers = [...el.querySelectorAll?.("[data-amarra-dialog-close]") ?? []];
+        let opener = null;
+        for (const btn of openers) {
+          const fn = (ev) => {
+            ev?.preventDefault?.();
+            opener = btn;
+            dlg.showModal?.();
+          };
+          btn[OPEN] = fn;
+          btn.addEventListener?.("click", fn);
+        }
+        for (const btn of closers) {
+          const fn = (ev) => {
+            ev?.preventDefault?.();
+            dlg.close?.();
+          };
+          btn[CLOSE] = fn;
+          btn.addEventListener?.("click", fn);
+        }
+        const onClose = () => opener?.focus?.();
+        dlg[ONCLOSE] = onClose;
+        dlg.addEventListener?.("close", onClose);
+        el[STATE2] = { dlg, openers, closers };
+      },
+      // #126: Idiomorph keeps the container and swaps children; rebind so the
+      // hook tracks the new nodes instead of stale references.
+      updated(el) {
+        dialog.disconnect(el);
+        dialog.connect(el);
+      },
+      disconnect(el) {
+        const st = el?.[STATE2];
+        if (!st) return;
+        for (const btn of st.openers ?? []) {
+          const fn = btn?.[OPEN];
+          if (!fn) continue;
+          btn.removeEventListener?.("click", fn);
+          delete btn[OPEN];
+        }
+        for (const btn of st.closers ?? []) {
+          const fn = btn?.[CLOSE];
+          if (!fn) continue;
+          btn.removeEventListener?.("click", fn);
+          delete btn[CLOSE];
+        }
+        const onClose = st.dlg?.[ONCLOSE];
+        if (onClose) {
+          st.dlg.removeEventListener?.("close", onClose);
+          delete st.dlg[ONCLOSE];
+        }
+        delete el[STATE2];
+      }
+    };
+  }
+  var dialog = makeDialog();
+
+  // pkg/amarra/js/hook_dropdown.mjs
+  var BTN = "_amarraDropdownToggle";
+  var MENU = "_amarraDropdownMenuClick";
+  var STATE3 = "_amarraDropdownState";
+  function makeDropdown() {
+    return {
+      connect(el) {
+        if (!el?.querySelector) return;
+        const btn = el.querySelector("[data-amarra-dropdown-button]");
+        const menu = el.querySelector("[data-amarra-dropdown-menu]");
+        if (!btn || !menu) return;
+        const doc = el.ownerDocument ?? globalThis.document;
+        const close = () => {
+          menu.hidden = true;
+          btn.setAttribute?.("aria-expanded", "false");
+        };
+        const toggle = (ev) => {
+          ev?.preventDefault?.();
+          const open = menu.hidden;
+          menu.hidden = !open;
+          btn.setAttribute?.("aria-expanded", String(open));
+        };
+        const onDocClick = (ev) => {
+          if (el.contains?.(ev?.target)) return;
+          close();
+        };
+        const onKey = (ev) => {
+          if (ev?.key === "Escape") close();
+        };
+        btn[BTN] = toggle;
+        btn.addEventListener?.("click", toggle);
+        menu[MENU] = close;
+        menu.addEventListener?.("click", close);
+        doc?.addEventListener?.("click", onDocClick);
+        doc?.addEventListener?.("keydown", onKey);
+        el[STATE3] = { btn, menu, doc, onDocClick, onKey };
+      },
+      // #126: Idiomorph keeps the container and swaps children; rebind so the
+      // hook tracks the new nodes and document listeners do not accumulate.
+      updated(el) {
+        dropdown.disconnect(el);
+        dropdown.connect(el);
+      },
+      disconnect(el) {
+        const st = el?.[STATE3];
+        if (!st) return;
+        const toggle = st.btn?.[BTN];
+        if (toggle) {
+          st.btn.removeEventListener?.("click", toggle);
+          delete st.btn[BTN];
+        }
+        const menuClose = st.menu?.[MENU];
+        if (menuClose) {
+          st.menu.removeEventListener?.("click", menuClose);
+          delete st.menu[MENU];
+        }
+        if (st.onDocClick) st.doc?.removeEventListener?.("click", st.onDocClick);
+        if (st.onKey) st.doc?.removeEventListener?.("keydown", st.onKey);
+        delete el[STATE3];
+      }
+    };
+  }
+  var dropdown = makeDropdown();
+
+  // pkg/amarra/js/hook_nav.mjs
+  var POPSTATE = "_amarraNavPopstate";
+  function makeNav(opts = {}) {
+    const getLocation = opts.location ?? (() => globalThis.location);
+    const getWindow = opts.window ?? globalThis.window;
+    function sync(el) {
+      const loc = getLocation();
+      if (!el || !loc?.pathname) return;
+      const on = classes(el, "data-amarra-nav-on", opts.onClasses);
+      const off = classes(el, "data-amarra-nav-off", opts.offClasses);
+      for (const link of el.querySelectorAll?.("a[href]") ?? []) {
+        if (isActive(link, loc)) {
+          off.forEach((c) => link.classList?.remove(c));
+          on.forEach((c) => link.classList?.add(c));
+          link.setAttribute?.("aria-current", "page");
+        } else {
+          on.forEach((c) => link.classList?.remove(c));
+          if (off.length) off.forEach((c) => link.classList?.add(c));
+          link.removeAttribute?.("aria-current");
+        }
+      }
+    }
+    return {
+      connect(el) {
+        if (!el) return;
+        sync(el);
+        const onPop = () => sync(el);
+        el[POPSTATE] = onPop;
+        getWindow?.addEventListener?.("popstate", onPop);
+      },
+      updated(el) {
+        sync(el);
+      },
+      disconnect(el) {
+        const fn = el?.[POPSTATE];
+        if (!fn) return;
+        getWindow?.removeEventListener?.("popstate", fn);
+        delete el[POPSTATE];
+      }
+    };
+  }
+  function classes(el, attr, fallback2) {
+    const raw = el.getAttribute?.(attr) || fallback2;
+    if (!raw) return [];
+    return raw.split(/\s+/).filter(Boolean);
+  }
+  function isActive(link, loc) {
+    const href = link.getAttribute?.("href");
+    if (!href || href.startsWith("#")) return false;
+    try {
+      return new URL(href, loc.href).pathname === loc.pathname;
+    } catch {
+      return false;
+    }
+  }
+  var nav = makeNav();
+
+  // pkg/amarra/js/hook_password.mjs
+  var CLICK2 = "_amarraPasswordClick";
+  function makePassword(findInput) {
+    const resolve = findInput ?? defaultFind;
+    return {
+      connect(el) {
+        if (!el || typeof el.addEventListener !== "function") return;
+        const fn = (ev) => {
+          ev?.preventDefault?.();
+          const sel = el.getAttribute?.("data-amarra-password-for") ?? "";
+          const input = resolve(sel, el);
+          if (!input) return;
+          const show = input.type === "password";
+          input.type = show ? "text" : "password";
+          el.setAttribute?.("aria-pressed", show ? "true" : "false");
+          swapAriaLabel(el, show);
+          toggleIcons(el, show);
+        };
+        el[CLICK2] = fn;
+        el.addEventListener("click", fn);
+      },
+      disconnect(el) {
+        const fn = el?.[CLICK2];
+        if (!fn || typeof el.removeEventListener !== "function") return;
+        el.removeEventListener("click", fn);
+        delete el[CLICK2];
+      }
+    };
+  }
+  function defaultFind(sel, el) {
+    if (sel) {
+      const root = el?.ownerDocument ?? globalThis.document;
+      try {
+        const found = root?.querySelector?.(sel);
+        if (found) return found;
+      } catch {
+        return null;
+      }
+    }
+    const scope = el?.closest?.("form") ?? el?.parentElement ?? null;
+    const inputs = scope?.querySelectorAll?.('input[type="password"]') ?? [];
+    if (inputs.length === 0) return null;
+    if (inputs.length === 1) return inputs[0];
+    let best = inputs[0];
+    for (const input of inputs) {
+      if (el?.compareDocumentPosition?.(input) & 2) best = input;
+    }
+    return best;
+  }
+  function swapAriaLabel(el, show) {
+    const showLabel = el.getAttribute?.("data-amarra-label-show");
+    const hideLabel = el.getAttribute?.("data-amarra-label-hide");
+    if (!showLabel && !hideLabel) return;
+    el.setAttribute?.("aria-label", show ? hideLabel || showLabel : showLabel || hideLabel);
+  }
+  function toggleIcons(el, show) {
+    const showIcon = el.querySelector?.('[data-amarra-password-icon="show"]') ?? el.querySelector?.('[data-cais-password-icon="show"]');
+    const hideIcon = el.querySelector?.('[data-amarra-password-icon="hide"]') ?? el.querySelector?.('[data-cais-password-icon="hide"]');
+    showIcon?.classList?.toggle?.("hidden", show);
+    hideIcon?.classList?.toggle?.("hidden", !show);
+  }
+  var password = makePassword();
+
+  // pkg/amarra/js/hook_reveal.mjs
+  var SYNC = "_amarraRevealSync";
+  function makeReveal(findTarget) {
+    const resolve = findTarget ?? defaultFind2;
+    return {
+      connect(el) {
+        if (!el || typeof el.addEventListener !== "function") return;
+        const fn = () => {
+          const match = el.getAttribute?.("data-amarra-reveal-show") ?? "";
+          const sel = el.getAttribute?.("data-amarra-reveal-target") ?? "";
+          const target = resolve(sel, el);
+          if (!target) return;
+          target.hidden = el.value !== match;
+        };
+        el[SYNC] = fn;
+        el.addEventListener("change", fn);
+        el.addEventListener("click", fn);
+        fn();
+      },
+      disconnect(el) {
+        const fn = el?.[SYNC];
+        if (!fn || typeof el.removeEventListener !== "function") return;
+        el.removeEventListener("change", fn);
+        el.removeEventListener("click", fn);
+        delete el[SYNC];
+      }
+    };
+  }
+  function defaultFind2(sel, el) {
+    if (!sel) return null;
+    const root = el?.ownerDocument ?? globalThis.document;
+    try {
+      return root?.querySelector?.(sel) ?? null;
+    } catch {
+      return null;
+    }
+  }
+  var reveal = makeReveal();
+
+  // pkg/amarra/js/hook_theme.mjs
+  var CLICK3 = "_amarraThemeClick";
+  var DEFAULT_KEY = "amarra-theme";
+  var DEFAULT_CLASS = "light";
+  function makeTheme(opts = {}) {
+    const getHtml = opts.html ?? (() => globalThis.document?.documentElement);
+    const getStorage = () => opts.storage ?? globalThis.localStorage;
+    const getMeta = opts.themeColorMeta ?? (() => globalThis.document?.querySelector?.('meta[name="theme-color"]'));
+    const keyFor = (el) => el?.getAttribute?.("data-amarra-theme-key") || opts.key || DEFAULT_KEY;
+    const classFor = (el) => el?.getAttribute?.("data-amarra-theme-class") || opts.className || DEFAULT_CLASS;
+    function apply(on, el) {
+      const className = classFor(el);
+      const key = keyFor(el);
+      const html = getHtml();
+      if (html?.classList) {
+        if (on) html.classList.add(className);
+        else html.classList.remove(className);
+      }
+      try {
+        getStorage()?.setItem?.(key, on ? className : "");
+      } catch {
+      }
+      const meta = getMeta?.();
+      const lightColor = el?.getAttribute?.("data-amarra-theme-color") || opts.lightColor;
+      const darkColor = el?.getAttribute?.("data-amarra-theme-color-off") || opts.darkColor;
+      const color = on ? lightColor : darkColor;
+      if (meta && color) meta.setAttribute?.("content", color);
+      const onLabel = el?.getAttribute?.("data-amarra-theme-on-label") || opts.onLabel;
+      const offLabel = el?.getAttribute?.("data-amarra-theme-off-label") || opts.offLabel;
+      const label = on ? onLabel : offLabel;
+      if (label && el) swapThemeLabel(el, label);
+      el?.setAttribute?.("aria-pressed", on ? "true" : "false");
+    }
+    return {
+      connect(el) {
+        if (!el || typeof el.addEventListener !== "function") return;
+        let stored = "";
+        try {
+          stored = getStorage()?.getItem?.(keyFor(el)) ?? "";
+        } catch {
+          stored = "";
+        }
+        if (stored === classFor(el)) apply(true, el);
+        const fn = (ev) => {
+          ev?.preventDefault?.();
+          const html = getHtml();
+          const on = !html?.classList?.contains?.(classFor(el));
+          apply(on, el);
+        };
+        el[CLICK3] = fn;
+        el.addEventListener("click", fn);
+      },
+      disconnect(el) {
+        const fn = el?.[CLICK3];
+        if (!fn || typeof el.removeEventListener !== "function") return;
+        el.removeEventListener("click", fn);
+        delete el[CLICK3];
+      }
+    };
+  }
+  var theme = makeTheme();
+  function swapThemeLabel(el, label) {
+    const slot = el.querySelector?.("[data-amarra-theme-label]");
+    if (slot) {
+      slot.textContent = label;
+      return;
+    }
+    if (el.children?.length) return;
+    el.textContent = label;
+  }
+
   // pkg/amarra/js/hook.mjs
+  register("bulk", bulk);
   register("clipboard", clipboard);
+  register("dialog", dialog);
+  register("dropdown", dropdown);
+  register("nav", nav);
+  register("password", password);
+  register("reveal", reveal);
+  register("theme", theme);
   var ON_CLASSES = ["bg-green-50", "text-green-700"];
   var OFF_CLASSES = ["bg-slate-100", "text-slate-600"];
-  var TOAST_MS = 4e3;
+  var TOAST_MS = 2e3;
   function csrfTokenFromMeta(htmlOrDoc) {
     if (!htmlOrDoc) return "";
     if (typeof htmlOrDoc === "string") {
@@ -901,39 +1339,20 @@
     if (!message || !doc) return;
     const host = doc.getElementById?.("amarra-toast-host");
     if (!host) return;
-    const kind = opts.kind || "info";
+    if (host._amarraToastTimer) {
+      clearTimeout(host._amarraToastTimer);
+      host._amarraToastTimer = null;
+    }
+    host.innerHTML = '<div class="amarra-toast-enter fixed top-24 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 border border-slate-700/50" role="status"><span class="text-xs font-bold"></span></div>';
+    const span = host.querySelector?.("span");
+    if (span) span.textContent = message;
     const duration = opts.duration ?? TOAST_MS;
-    const id = "amarra-toast-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7);
-
-    const toast = doc.createElement("div");
-    toast.id = id;
-    toast.className = "amarra-toast amarra-toast-" + kind + " amarra-toast-enter";
-    toast.setAttribute("role", "status");
-    const kindMark = { success: "\u2713", error: "\u2715", warning: "\u26A0", info: "i" }[kind] || "i";
-    toast.innerHTML =
-      '<span class="amarra-toast-icon">' + kindMark + '</span>' +
-      '<span class="amarra-toast-message"></span>' +
-      '<button type="button" class="amarra-toast-close" aria-label="Dismiss">&times;</button>';
-    toast.querySelector(".amarra-toast-message").textContent = message;
-
-    const dismiss = () => {
-      if (!toast.isConnected) return;
-      toast.classList.remove("amarra-toast-enter");
-      toast.classList.add("amarra-toast-leave");
-      toast.addEventListener("animationend", () => toast.remove(), { once: true });
-    };
-    toast.querySelector(".amarra-toast-close").addEventListener("click", dismiss);
-
-    host.appendChild(toast);
-    if (duration > 0) setTimeout(dismiss, duration);
-  }
-  // Surface flash messages rendered in the layout as animated toasts.
-  function showInitialFlash(doc) {
-    if (!doc?.querySelector) return;
-    const el = doc.querySelector("[data-amarra-flash]");
-    if (!el) return;
-    showToast(el.textContent.trim(), doc, { kind: el.getAttribute("data-amarra-flash-kind") || "info" });
-    el.remove();
+    if (duration > 0) {
+      host._amarraToastTimer = setTimeout(() => {
+        host.innerHTML = "";
+        host._amarraToastTimer = null;
+      }, duration);
+    }
   }
   function applyFocus(selector, doc) {
     if (!selector || !doc?.querySelector) return;
@@ -989,17 +1408,22 @@
     if (!doc || typeof doc.addEventListener !== "function") return;
     if (doc.documentElement?.dataset?.amarraHook === "true") return;
     if (doc.documentElement?.dataset) doc.documentElement.dataset.amarraHook = "true";
+    register("bulk", bulk);
     register("clipboard", clipboard);
+    register("dialog", dialog);
+    register("dropdown", dropdown);
+    register("nav", nav);
+    register("password", password);
+    register("reveal", reveal);
+    register("theme", theme);
     scan(doc);
-    showInitialFlash(doc);
     let optimistic = null;
     doc.addEventListener("amarra:toast", (ev) => {
-      showToast(ev.detail?.message ?? "", doc, { ...opts, kind: ev.detail?.kind });
+      showToast(ev.detail?.message ?? "", doc, opts);
     });
     doc.addEventListener("amarra:morphed", () => {
       optimistic = null;
       afterMorph(doc);
-      showInitialFlash(doc);
       scan(doc);
     });
     doc.addEventListener("amarra:drive-error", () => {
@@ -1017,8 +1441,8 @@
       true
     );
   }
-  function hasClasses(el, classes) {
-    return classes.every((c) => el.classList?.contains(c));
+  function hasClasses(el, classes2) {
+    return classes2.every((c) => el.classList?.contains(c));
   }
   function setClasses(el, add, remove) {
     remove.forEach((c) => el.classList?.remove(c));
@@ -1079,12 +1503,15 @@
     const id = el.getAttribute?.("id") || el.id || "";
     const fetchFn = opts.fetchFn ?? opts.fetch ?? fetch;
     const csrfToken = opts.csrfToken ?? csrfTokenFromMeta(opts.document ?? (typeof document !== "undefined" ? document : ""));
+    const seq = bumpSequence(el);
     const res = await fetchFn(src, {
       headers: frameHeaders(id, csrfToken),
       credentials: "same-origin",
       redirect: "follow"
     });
     const html = await res.text();
+    if (!isCurrentSequence(el, seq)) return;
+    if (el.isConnected === false) return;
     (opts.morphFn ?? morph)(el, html);
     const doc = opts.document ?? (typeof document !== "undefined" ? document : null);
     if (doc && typeof doc.dispatchEvent === "function") {
@@ -1140,7 +1567,7 @@
   ];
   function parseSSE(chunk) {
     const events = [];
-    const text = String(chunk ?? "").replace(/\r\n/g, "\n");
+    const text = String(chunk ?? "").replace(/\r\n?/g, "\n");
     for (const block of text.split("\n\n")) {
       if (!block.trim()) continue;
       let kind = "message";
@@ -1222,17 +1649,32 @@
   }
   function start2(opts = {}) {
     const doc = opts.document ?? (typeof document !== "undefined" ? document : null);
-    if (!doc) return;
-    const nodes = typeof doc.querySelectorAll === "function" ? doc.querySelectorAll("[data-amarra-stream]") : [];
-    for (const el of nodes) {
-      const url = el.getAttribute?.("data-amarra-stream");
-      if (!url) continue;
-      connect(url, {
-        ...opts,
-        document: doc,
-        defaultTarget: el.getAttribute?.("data-amarra-target") || opts.defaultTarget
-      });
-    }
+    if (!doc || typeof doc.addEventListener !== "function") return;
+    if (doc.documentElement?.dataset?.amarraStream === "true") return;
+    if (doc.documentElement?.dataset) doc.documentElement.dataset.amarraStream = "true";
+    const sources = /* @__PURE__ */ new Map();
+    const sync = () => {
+      for (const [el, src] of sources) {
+        if (el.isConnected === false) {
+          src?.close?.();
+          sources.delete(el);
+        }
+      }
+      const nodes = typeof doc.querySelectorAll === "function" ? doc.querySelectorAll("[data-amarra-stream]") : [];
+      for (const el of nodes) {
+        if (sources.has(el)) continue;
+        const url = el.getAttribute?.("data-amarra-stream");
+        if (!url) continue;
+        const src = connect(url, {
+          ...opts,
+          document: doc,
+          defaultTarget: el.getAttribute?.("data-amarra-target") || opts.defaultTarget
+        });
+        if (src) sources.set(el, src);
+      }
+    };
+    sync();
+    doc.addEventListener("amarra:morphed", sync);
   }
   function sseEnvelope(kind, data) {
     const lines = String(data ?? "").split("\n").map((line) => `data: ${line}`);
@@ -1260,16 +1702,31 @@ ${lines.join("\n")}
     const m = String(html ?? "").match(/<title\b[^>]*>([\s\S]*?)<\/title>/i);
     return m ? m[1].trim() : null;
   }
+  function extractHTMLAttr(html, name) {
+    const open = String(html ?? "").match(/<html\b[^>]*>/i)?.[0] ?? "";
+    const escaped = String(name).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const m = open.match(new RegExp(`\\s${escaped}\\s*=\\s*["']([^"']*)["']`, "i"));
+    return m ? m[1] : null;
+  }
   function applyHead(doc, html) {
     if (!doc) return;
     const title = extractTitle(html);
     if (title != null) doc.title = title;
+    const lang = extractHTMLAttr(html, "lang");
+    if (lang != null && doc.documentElement) doc.documentElement.lang = lang;
     const token = csrfTokenFromMeta(html);
     if (!token) return;
     const meta = doc.querySelector?.('meta[name="csrf-token"]');
     if (!meta) return;
     if (typeof meta.setAttribute === "function") meta.setAttribute("content", token);
     else meta.content = token;
+  }
+  function ensureVeilKeyframes(doc) {
+    if (!doc?.createElement || doc.getElementById?.("amarra-veil-style")) return;
+    const style = doc.createElement("style");
+    style.id = "amarra-veil-style";
+    style.textContent = "@keyframes amarra-spin{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){#amarra-veil div{animation:none!important}}";
+    (doc.head ?? doc.body)?.appendChild?.(style);
   }
   function showProgress(doc) {
     if (!doc?.createElement || !doc.body) return;
@@ -1282,10 +1739,31 @@ ${lines.join("\n")}
       doc.body.appendChild(bar);
     }
     bar.hidden = false;
+    let veil = doc.getElementById?.("amarra-veil");
+    if (!veil) {
+      veil = doc.createElement("div");
+      veil.id = "amarra-veil";
+      veil.setAttribute("role", "status");
+      veil.setAttribute("aria-label", "Loading");
+      veil.style.cssText = "position:fixed;inset:0;z-index:9998;display:flex;align-items:center;justify-content:center;background:rgba(10,10,12,.45);backdrop-filter:blur(2px);opacity:0;transition:opacity .18s ease;pointer-events:none";
+      const spinner = doc.createElement("div");
+      spinner.setAttribute("role", "presentation");
+      spinner.style.cssText = "width:52px;height:52px;border-radius:50%;border:4px solid rgba(201,137,58,.25);border-top-color:#c9893a;animation:amarra-spin .9s linear infinite";
+      veil.appendChild?.(spinner);
+      ensureVeilKeyframes(doc);
+      doc.body.appendChild(veil);
+    }
+    veil.hidden = false;
+    if (veil.style) veil.style.opacity = "1";
   }
   function hideProgress(doc) {
     const bar = doc?.getElementById?.("amarra-progress");
     if (bar) bar.hidden = true;
+    const veil = doc?.getElementById?.("amarra-veil");
+    if (veil) {
+      if (veil.style) veil.style.opacity = "0";
+      veil.hidden = true;
+    }
   }
 
   // pkg/amarra/js/drive_form.mjs
@@ -1295,12 +1773,12 @@ ${lines.join("\n")}
     const fn = confirmFn ?? (typeof globalThis.confirm === "function" ? globalThis.confirm.bind(globalThis) : () => true);
     return !!fn(msg);
   }
-  function requestMethod(el, fallback = "GET") {
+  function requestMethod(el, fallback2 = "GET") {
     const attr = el?.getAttribute?.("data-amarra-method");
     if (attr) return String(attr).toUpperCase();
     const hidden = el?.querySelector?.('input[name="_method"]');
     if (hidden?.value) return String(hidden.value).toUpperCase();
-    return String(fallback || "GET").toUpperCase();
+    return String(fallback2 || "GET").toUpperCase();
   }
   function disableSubmit(el) {
     if (!el) return null;
@@ -1314,6 +1792,15 @@ ${lines.join("\n")}
     if (!prev?.el) return;
     prev.el.disabled = prev.disabled;
     if (prev.text != null) prev.el.textContent = prev.text;
+  }
+  function driveFormBody(formData, URLSearchParamsCtor = URLSearchParams, FileCtor = typeof File !== "undefined" ? File : null) {
+    if (!formData) return null;
+    for (const [, value] of formData.entries()) {
+      if (FileCtor && value instanceof FileCtor) return formData;
+    }
+    const body = new URLSearchParamsCtor();
+    for (const [key, value] of formData.entries()) body.append(key, value);
+    return body;
   }
 
   // pkg/amarra/js/drive_restore.mjs
@@ -1371,10 +1858,19 @@ ${lines.join("\n")}
   }
   function extractMainHTML(html) {
     const str = String(html ?? "");
-    const open = str.match(/<([a-zA-Z][\w:-]*)(?=[^>]*\sid\s*=\s*["']amarra-main["'])[^>]*>/i);
+    const open = extractMainOpen(str);
     if (!open) return null;
     const start5 = open.index + open[0].length;
     return sliceMatchingClose(str, start5, open[1]);
+  }
+  function extractMainTagName(html) {
+    return extractMainOpen(String(html ?? ""))?.[1]?.toUpperCase() ?? null;
+  }
+  function defaultDriveWarn(msg) {
+    try {
+      globalThis.console?.warn?.(msg);
+    } catch {
+    }
   }
   function applyDriveResponse({
     status,
@@ -1386,7 +1882,8 @@ ${lines.join("\n")}
     history,
     document: doc,
     push = true,
-    window: win
+    window: win,
+    warn = defaultDriveWarn
   } = {}) {
     if (status === 401 || status === 403) {
       location?.reload?.();
@@ -1397,23 +1894,18 @@ ${lines.join("\n")}
       return { action: "ignore" };
     }
     const fragment = extractMainHTML(html);
-    if (fragment == null) return { action: "ignore" };
-    // Layout switch (e.g. logout app→auth, login auth→app) needs a full
-    // navigation: morphing only #amarra-main would keep the old shell
-    // (sidebar, user email, sign-out) on screen.
-    const nextLayout = (String(html).match(/<html[^>]*\bdata-layout="([^"]+)"/i) || [])[1];
-    const currentLayout = doc?.documentElement?.dataset?.layout;
-    if (nextLayout && currentLayout && nextLayout !== currentLayout) {
-      if (win?.location) {
-        if (String(win.location.href) === String(url)) {
-          win.location.reload();
-        } else {
-          win.location.assign(url);
-        }
-      }
-      return { action: "reload" };
+    if (fragment == null) {
+      warn(
+        `amarra drive: ignored ${status} response for ${url ?? "(unknown url)"} \u2014 #amarra-main missing or unbalanced HTML`
+      );
+      return { action: "ignore" };
+    }
+    if (needsFullVisit({ html, main, document: doc })) {
+      assignLocation(location, url);
+      return { action: "assign" };
     }
     applyHead(doc, html);
+    applyLayoutMarker(doc, html);
     if (main) (morphFn ?? morph)(main, fragment);
     if (status === 200 && push && url && history?.pushState) {
       if (!location?.href || url !== location.href) {
@@ -1428,9 +1920,31 @@ ${lines.join("\n")}
     }
     return { action: "morph" };
   }
+  function needsFullVisit({ html, main, document: doc }) {
+    const currentLayout = doc?.documentElement?.dataset?.amarraLayout;
+    const nextLayout = extractHTMLAttr(html, "data-amarra-layout");
+    if (currentLayout && nextLayout && currentLayout !== nextLayout) return true;
+    const currentTag = main?.tagName?.toUpperCase?.();
+    const nextTag = extractMainTagName(html);
+    return !!(currentTag && nextTag && currentTag !== nextTag);
+  }
+  function assignLocation(location, url) {
+    if (url && typeof location?.assign === "function") {
+      location.assign(url);
+      return;
+    }
+    if (url && location) location.href = url;
+  }
+  function applyLayoutMarker(doc, html) {
+    const layout = extractHTMLAttr(html, "data-amarra-layout");
+    if (layout != null && doc?.documentElement?.dataset) {
+      doc.documentElement.dataset.amarraLayout = layout;
+    }
+  }
   async function visit(url, opts = {}) {
     const fetchFn = opts.fetchFn ?? opts.fetch ?? fetch;
     const doc = opts.document;
+    const seq = bumpSequence(doc);
     showProgress(doc);
     try {
       const res = await fetchFn(url, {
@@ -1440,6 +1954,9 @@ ${lines.join("\n")}
         redirect: "follow",
         credentials: "same-origin"
       });
+      if (!isCurrentSequence(doc, seq)) {
+        return { action: "superseded" };
+      }
       const win = opts.window ?? (typeof window !== "undefined" ? window : null);
       const location = opts.location ?? win?.location ?? null;
       const history = opts.history ?? win?.history ?? null;
@@ -1449,37 +1966,20 @@ ${lines.join("\n")}
         for (const op of parseSSE(html)) applyOp(op, doc, opts);
         return { action: "stream" };
       }
-      const apply = () =>
-        applyDriveResponse({
-          status: res.status,
-          html,
-          url: res.url || url,
-          main: doc?.querySelector?.("#amarra-main") ?? opts.main ?? null,
-          morphFn: opts.morphFn,
-          location,
-          history,
-          document: doc,
-          push: opts.push !== false,
-          window: win
-        });
-      if (typeof doc?.startViewTransition === "function") {
-        let result;
-        doc.startViewTransition(() => {
-          result = apply();
-        });
-        return result;
-      }
-      // Fallback: fade the morphed region in when View Transitions are unsupported.
-      const main = doc?.querySelector?.("#amarra-main");
-      const result = apply();
-      if (main) {
-        main.classList.remove("amarra-page-enter");
-        void main.offsetWidth; // restart the animation on the fresh content
-        main.classList.add("amarra-page-enter");
-      }
-      return result;
+      return applyDriveResponse({
+        status: res.status,
+        html,
+        url: res.url || url,
+        main: doc?.querySelector?.("#amarra-main") ?? opts.main ?? null,
+        morphFn: opts.morphFn,
+        location,
+        history,
+        document: doc,
+        push: opts.push !== false,
+        window: win
+      });
     } finally {
-      hideProgress(doc);
+      if (isCurrentSequence(doc, seq)) hideProgress(doc);
     }
   }
   function start3(opts = {}) {
@@ -1545,11 +2045,12 @@ ${lines.join("\n")}
       event.preventDefault();
       const fd = FormDataCtor ? formDataWithSubmitter(form, submitter, FormDataCtor) : null;
       const url = verb === "GET" ? withQuery(rawAction, fd) : rawAction;
+      const body = verb === "GET" ? void 0 : driveFormBody(fd);
       const disabled = disableSubmit(submitter);
       void visit(url, {
         ...shared,
         method: verb,
-        body: verb === "GET" ? void 0 : fd
+        body
       }).catch(() => emitDriveError(doc)).finally(() => restoreSubmit(disabled));
     });
     if (typeof window !== "undefined" && opts.popstate !== false) {
@@ -1592,6 +2093,9 @@ ${lines.join("\n")}
       i = nextClose + closeToken.length;
     }
     return null;
+  }
+  function extractMainOpen(str) {
+    return str.match(/<([a-zA-Z][\w:-]*)(?=[^>]*\sid\s*=\s*["']amarra-main["'])[^>]*>/i);
   }
   function findOpenTag(lower, from, name) {
     const token = `<${name}`;
@@ -1783,7 +2287,19 @@ ${lines.join("\n")}
         }, wait);
       });
     }
-    doc.querySelectorAll?.("[amarra-live]").forEach((el) => connect2(el));
+    function sync() {
+      for (const [root, ws] of sockets) {
+        if (root.isConnected === false) {
+          ws?.close?.();
+          sockets.delete(root);
+        }
+      }
+      doc.querySelectorAll?.("[amarra-live]").forEach((el) => {
+        if (!sockets.has(el)) connect2(el);
+      });
+    }
+    sync();
+    if (typeof doc.addEventListener === "function") doc.addEventListener("amarra:morphed", sync);
     function sendFrom(el, kind, extra) {
       const root = liveRoot(el);
       if (!root) return false;
