@@ -56,5 +56,10 @@ jobs:
       - name: Prettier
         run: npx prettier --check .
 
+      - name: CSS is up to date
+        run: |
+          npx tailwindcss -i input.css -o web/static/css/styles.css --minify
+          git diff --exit-code -- web/static/css/styles.css
+
       - name: npm test
         run: npm test
