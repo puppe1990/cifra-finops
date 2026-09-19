@@ -13,3 +13,4 @@ tmp/
 docs/screenshots/
 .commandcode/
 .playwright-cli/
+.superpowers/
