@@ -61,17 +61,15 @@
     {{ range .amplify }}
     <li class="border-b border-paper-200/10 pb-8 last:border-b-0 last:pb-0">
       <div class="flex items-baseline justify-between gap-4">
-        <h4 class="font-display text-xl leading-tight">
-          {{ .name }}
+        <div class="flex flex-wrap items-baseline gap-2">
+          <h4 class="font-display text-xl leading-tight">{{ .name }}</h4>
           {{ with .hintKey }}{{ $hint := index $.labels . }}{{ if $hint }}
-          <span class="group relative inline-flex align-middle" data-testid="amplify-hint">
-            <button type="button" aria-label="{{ $hint }}" class="inline-flex h-4 w-4 items-center justify-center rounded-full border border-paper-200/40 font-mono text-[10px] leading-none text-paper-200 hover:border-copper-400 hover:text-copper-400 focus:outline-none focus-visible:border-copper-400">
-              ?
-              <span role="tooltip" class="pointer-events-none absolute left-0 top-6 z-20 hidden w-64 border border-ink-700 bg-ink-900 p-3 text-left font-sans text-xs font-normal leading-snug text-paper-100 shadow-lg group-hover:block group-focus-within:block">{{ $hint }}</span>
-            </button>
-          </span>
+          <details class="inline-block" data-testid="amplify-hint">
+            <summary title="{{ $hint }}" aria-label="{{ $hint }}" class="inline-flex h-4 w-4 cursor-help list-none items-center justify-center rounded-full border border-paper-200/40 font-mono text-[10px] leading-none text-paper-200 hover:border-copper-400 hover:text-copper-400">?</summary>
+            <span class="mt-2 block w-64 border border-ink-700 bg-ink-900 p-3 text-xs leading-snug text-paper-100">{{ $hint }}</span>
+          </details>
           {{ end }}{{ end }}
-        </h4>
+        </div>
         <p class="shrink-0 font-mono text-lg text-copper-400">{{ .usd }}</p>
       </div>
       <div class="mt-4 w-full bg-ink-800" style="height: 0.45rem"><div class="h-full bg-copper-400" data-testid="amplify-bar" style="width: {{ .pct }}%"></div></div>
